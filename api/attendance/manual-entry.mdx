@@ -148,3 +148,89 @@ If break times were not properly recorded, they can be manually entered to maint
 - Only authorized administrators should have access to this endpoint
 - All manual entries are logged with the administrator's information for audit trail
 - Time values must be in valid HH:mm:ss format
+
+---
+
+## Create Complete Shift
+
+<api>POST /asistencia/jornada/completa</api>
+
+Create a complete shift record with both start and end times in a single operation. This is useful for backdating entire shifts.
+
+### Request Body
+
+<ParamField body="empleadoId" type="integer" required>
+  Employee ID
+</ParamField>
+
+<ParamField body="unidadId" type="integer" required>
+  Unit/location ID where shift occurred
+</ParamField>
+
+<ParamField body="horaInicio" type="string" required>
+  Shift start time (HH:mm:ss format)
+</ParamField>
+
+<ParamField body="horaFin" type="string" required>
+  Shift end time (HH:mm:ss format)
+</ParamField>
+
+<ParamField body="fecha" type="string" required>
+  Date of the shift (yyyy-MM-dd format)
+</ParamField>
+
+<ParamField body="observaciones" type="string" required>
+  Reason for manual entry
+</ParamField>
+
+### Response
+
+```json
+{
+  "data": null,
+  "message": "Jornada completa registrada"
+}
+```
+
+---
+
+## Create Complete Break
+
+<api>POST /asistencia/pausa/completa</api>
+
+Create a complete break record with both start and end times in a single operation.
+
+### Request Body
+
+<ParamField body="empleadoId" type="integer" required>
+  Employee ID
+</ParamField>
+
+<ParamField body="pausa" type="string" required>
+  Break type: `COMIDA` or `OTRA`
+</ParamField>
+
+<ParamField body="horaInicio" type="string" required>
+  Break start time (HH:mm:ss format)
+</ParamField>
+
+<ParamField body="horaFin" type="string" required>
+  Break end time (HH:mm:ss format)
+</ParamField>
+
+<ParamField body="fecha" type="string" required>
+  Date of the break (yyyy-MM-dd format)
+</ParamField>
+
+<ParamField body="observaciones" type="string" required>
+  Reason for manual entry
+</ParamField>
+
+### Response
+
+```json
+{
+  "data": null,
+  "message": "Pausa completa registrada"
+}
+```

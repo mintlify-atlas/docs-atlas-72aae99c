@@ -393,6 +393,72 @@ Zones enable:
 3. **Referential Integrity**: Before deleting a zone, ensure no units reference it
 4. **Hierarchical Organization**: Consider zone hierarchy if needed (e.g., regions containing zones)
 
+---
+
+## Get States (Geographic)
+
+<api>GET /estados</api>
+
+Retrieve the list of Mexican states (estados) for geographic reference. This is a read-only catalog used for address and location information.
+
+### Authentication
+
+This endpoint is **publicly accessible** and does not require authentication.
+
+### Response
+
+<ResponseField name="data" type="array">
+  Array of state objects
+  <Expandable title="Estado">
+    <ResponseField name="id" type="integer">
+      State ID
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      State name (e.g., "Jalisco", "Ciudad de México")
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Estados registrados"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "https://api.integra.example/estados"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Aguascalientes"
+    },
+    {
+      "id": 2,
+      "nombre": "Baja California"
+    },
+    {
+      "id": 9,
+      "nombre": "Ciudad de México"
+    }
+  ],
+  "message": "Estados registrados",
+  "success": true
+}
+```
+
+<Info>
+This catalog contains all 32 Mexican states and is used for address validation and geographic filtering throughout the system.
+</Info>
+
+---
+
 ## Related Endpoints
 
 - [Units API](/api/organization/units) - Manage organizational units that belong to zones

@@ -567,3 +567,158 @@ curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/emple
 <Note>
 This report only includes employees who were expected to work (based on their schedules) but did not register attendance.
 </Note>
+
+---
+
+## Get Compensation Report
+
+<api>GET /opentime/compensaciones</api>
+
+Retrieve compensation time records for employees who clocked in early or stayed late beyond their scheduled hours.
+
+### Query Parameters
+
+<ParamField query="inicio" type="string" required>
+  Start date for the report (yyyy-MM-dd format)
+</ParamField>
+
+<ParamField query="fin" type="string" required>
+  End date for the report (yyyy-MM-dd format)
+</ParamField>
+
+<ParamField query="empleadoId" type="integer" optional>
+  Filter by specific employee ID
+</ParamField>
+
+<ParamField query="unidadId" type="integer" optional>
+  Filter by unit ID
+</ParamField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "https://api.integra.example/opentime/compensaciones?inicio=2026-03-01&fin=2026-03-31&unidadId=5" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Response
+
+```json
+{
+  "data": [
+    {
+      "empleadoId": 1234,
+      "nombreEmpleado": "Juan Pérez",
+      "fecha": "2026-03-05",
+      "horaLlegada": "07:45:00",
+      "horaInicio": "08:00:00",
+      "horaSalida": "17:15:00",
+      "horaFin": "17:00:00",
+      "compensacionInicio": "00:15:00",
+      "compensacionFin": "00:15:00",
+      "totalCompensacion": "00:30:00"
+    }
+  ],
+  "message": "Compensaciones",
+  "success": true
+}
+```
+
+---
+
+## Export Compensation Report to Excel
+
+<api>GET /opentime/compensaciones/excel</api>
+
+Export the compensation report as an Excel file for payroll processing.
+
+### Query Parameters
+
+Same parameters as the JSON compensation report endpoint.
+
+### Example Request
+
+```bash cURL
+curl -X GET "https://api.integra.example/opentime/compensaciones/excel?inicio=2026-03-01&fin=2026-03-31" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  --output compensaciones.xlsx
+```
+
+### Response
+
+Returns an Excel file (`.xlsx`) with the following columns:
+- Employee ID
+- Employee Name
+- Date
+- Arrival Time
+- Scheduled Start
+- Departure Time
+- Scheduled End
+- Early Arrival Compensation
+- Late Departure Compensation
+- Total Compensation Time
+
+---
+
+## Get Attendance with Incidents
+
+<api>GET /asistencia/incidencia</api>
+
+Retrieve attendance records filtered by specific incident types (late arrivals, early departures, missed punches, etc.).
+
+### Query Parameters
+
+<ParamField query="inicio" type="string" required>
+  Start date (yyyy-MM-dd format)
+</ParamField>
+
+<ParamField query="fin" type="string" required>
+  End date (yyyy-MM-dd format)
+</ParamField>
+
+<ParamField query="empleadoId" type="integer" optional>
+  Filter by employee ID
+</ParamField>
+
+<ParamField query="unidadId" type="integer" optional>
+  Filter by unit ID
+</ParamField>
+
+<ParamField query="tipoIncidencia" type="string" optional>
+  Filter by incident type (e.g., "RETARDO", "FALTA", "SALIDA_ANTICIPADA")
+</ParamField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "https://api.integra.example/asistencia/incidencia?inicio=2026-03-01&fin=2026-03-07&tipoIncidencia=RETARDO" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Response
+
+```json
+{
+  "data": {
+    "registros": [
+      {
+        "empleadoId": 1234,
+        "nombreEmpleado": "María García",
+        "fecha": "2026-03-03",
+        "horaLlegada": "08:15:00",
+        "horaSalida": "17:00:00",
+        "incidencia": "RETARDO",
+        "minutosRetardo": 15,
+        "observaciones": "Tráfico"
+      }
+    ],
+    "totalIncidencias": 1
+  },
+  "message": "Reporte de asistencia generado",
+  "success": true
+}
+```
+
+<Note>
+This endpoint is useful for identifying patterns in attendance issues and generating disciplinary reports.
+</Note>
