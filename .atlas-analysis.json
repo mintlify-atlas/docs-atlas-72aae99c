@@ -1,0 +1,181 @@
+{
+  "projectType": "api-service",
+  "projectName": "Integra",
+  "projectDescription": "Employee attendance and management system with time tracking, access control, and reporting capabilities",
+  "theme": "linden",
+  "primaryColor": "#1e40af",
+  "lightColor": "#3b82f6",
+  "darkColor": "#1e3a8a",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/attendance-system",
+              "concepts/organizational-structure",
+              "concepts/access-control",
+              "concepts/kiosk-mode"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/attendance-recording",
+              "guides/employee-management",
+              "guides/reports-generation",
+              "guides/credentials-management",
+              "guides/observations-audits"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Authentication",
+            "pages": [
+              "api/auth/login",
+              "api/auth/password-reset",
+              "api/auth/registration"
+            ]
+          },
+          {
+            "group": "Attendance",
+            "pages": [
+              "api/attendance/start-shift",
+              "api/attendance/end-shift",
+              "api/attendance/breaks",
+              "api/attendance/manual-entry",
+              "api/attendance/queries"
+            ]
+          },
+          {
+            "group": "Employees",
+            "pages": [
+              "api/employees/overview",
+              "api/employees/management"
+            ]
+          },
+          {
+            "group": "Organization",
+            "pages": [
+              "api/organization/departments",
+              "api/organization/positions",
+              "api/organization/units",
+              "api/organization/zones",
+              "api/organization/schedules"
+            ]
+          },
+          {
+            "group": "Credentials",
+            "pages": [
+              "api/credentials/overview",
+              "api/credentials/management"
+            ]
+          },
+          {
+            "group": "Access Control",
+            "pages": [
+              "api/access/users",
+              "api/access/roles",
+              "api/access/permissions"
+            ]
+          },
+          {
+            "group": "Kiosk",
+            "pages": [
+              "api/kiosk/overview",
+              "api/kiosk/clock-in"
+            ]
+          },
+          {
+            "group": "Reports",
+            "pages": [
+              "api/reports/overview",
+              "api/reports/attendance",
+              "api/reports/excel-export"
+            ]
+          },
+          {
+            "group": "Observations",
+            "pages": [
+              "api/observations/overview",
+              "api/observations/management"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Attendance tracking with clock in/out",
+    "Break and pause management",
+    "Kiosk mode for self-service time registration",
+    "Photo capture on attendance registration",
+    "Manual attendance entry by administrators",
+    "Employee management with organizational structure",
+    "Role-based access control with JWT authentication",
+    "Multi-unit support with zone management",
+    "Operational schedules configuration",
+    "Credentials and badges management",
+    "Observations and audit system",
+    "Excel report generation for payroll",
+    "Attendance inconsistency detection",
+    "Password reset and user registration flows",
+    "OpenAPI/Swagger documentation"
+  ],
+  "publicApiSurface": [
+    "POST /auth/login",
+    "POST /auth/forgot-password",
+    "POST /auth/reset-password",
+    "POST /auth/register-request",
+    "POST /auth/register-confirm",
+    "POST /asistencia/iniciar",
+    "POST /asistencia/finalizar",
+    "POST /asistencia/pausa/iniciar",
+    "POST /asistencia/pausa/finalizar",
+    "POST /asistencia/manual",
+    "PUT /asistencia/jornada",
+    "PUT /asistencia/pausa",
+    "DELETE /asistencia/jornada/{id}",
+    "DELETE /asistencia/pausa/{id}",
+    "GET /empleados",
+    "POST /empleados",
+    "PUT /empleados/{id}",
+    "DELETE /empleados/{id}",
+    "GET /departamentos",
+    "POST /departamentos",
+    "GET /puestos",
+    "POST /puestos",
+    "GET /unidades",
+    "POST /unidades",
+    "GET /zonas",
+    "POST /zonas",
+    "GET /credenciales",
+    "POST /credenciales",
+    "GET /users",
+    "POST /users",
+    "GET /roles",
+    "POST /roles",
+    "GET /kioscos",
+    "POST /kioscos",
+    "GET /reportes/asistencia",
+    "GET /reportes/excel",
+    "GET /observaciones",
+    "POST /observaciones",
+    "GET /horarios",
+    "POST /horarios"
+  ]
+}
