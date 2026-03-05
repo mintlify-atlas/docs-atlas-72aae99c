@@ -1,0 +1,85 @@
+---
+title: 'Start Shift'
+api: 'POST /asistencia/iniciar'
+description: 'Initiates a work shift for an employee'
+---
+
+## Overview
+
+This endpoint registers the start of an employee's work shift. It captures the employee's photo, location (unit), and timestamp to mark the beginning of their workday.
+
+## Request Body
+
+<ParamField body="empleadoId" type="integer" required>
+  The unique identifier of the employee starting their shift
+</ParamField>
+
+<ParamField body="unidadId" type="integer" required>
+  The ID of the unit/location where the employee is starting their shift
+</ParamField>
+
+<ParamField body="foto" type="string">
+  Base64-encoded photo of the employee for attendance verification (optional)
+</ParamField>
+
+<ParamField body="unidadAsignadaId" type="integer">
+  The ID of the employee's assigned unit (optional)
+</ParamField>
+
+<ParamField body="hora" type="string">
+  Custom time for shift start in HH:mm:ss format (optional). If not provided, current time is used
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="null">
+  No data is returned for this endpoint
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message: "Jornada iniciada"
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X POST https://api.integra.com/asistencia/iniciar \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "empleadoId": 123,
+    "unidadId": 5,
+    "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+    "unidadAsignadaId": 5,
+    "hora": "08:00:00"
+  }'
+```
+
+## Response Example
+
+```json Success Response
+{
+  "success": true,
+  "data": null,
+  "message": "Jornada iniciada"
+}
+```
+
+```json Error Response
+{
+  "success": false,
+  "message": "El ID del empleado no puede ser nulo"
+}
+```
+
+## Business Rules
+
+- An employee cannot start a shift if they already have an active shift in progress
+- The `empleadoId` and `unidadId` are mandatory fields
+- If `hora` is not provided, the system uses the current server time
+- The photo field is optional but recommended for attendance verification
+- Unit validation ensures the employee is starting their shift at a valid location

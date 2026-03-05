@@ -1,0 +1,334 @@
+---
+title: 'Employee Management'
+description: 'Manage employees, retrieve employee information, and filter employee catalogs'
+---
+
+## Overview
+
+The Employee Management API provides endpoints to query employee information, retrieve catalogs with filters, and access supervisor lists. This guide covers the core employee query operations available in the Integra system.
+
+## Retrieving Employee Catalog
+
+Get a filtered list of employees based on various criteria.
+
+<Steps>
+  <Step title="Prepare filter parameters">
+    **Endpoint:** `GET /empleados`
+
+    **Available Filter Parameters:**
+    - `unidadId` - Filter by unit/location
+    - `departamentoId` - Filter by department
+    - `puestoId` - Filter by position
+    - `supervisorId` - Filter by supervisor
+    - `zonaId` - Filter by zone
+    - `activos` - Filter by active status (boolean)
+    - `codigo` - Filter by employee code
+    - `nombre` - Search by name
+
+    All parameters are optional and can be combined for precise filtering.
+  </Step>
+
+  <Step title="Execute the query">
+    **Example: Get all active employees in unit 5**
+    ```bash
+    curl -X GET "https://api.example.com/empleados?unidadId=5&activos=true" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Search employees by name**
+    ```bash
+    curl -X GET "https://api.example.com/empleados?nombre=Juan" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get employees by department and position**
+    ```bash
+    curl -X GET "https://api.example.com/empleados?departamentoId=10&puestoId=3" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Process the response">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": [
+        {
+          "id": 123,
+          "codigo": "EMP001",
+          "nombre": "Juan",
+          "apellidoPaterno": "García",
+          "apellidoMaterno": "López",
+          "nombreCompleto": "Juan García López",
+          "puesto": {
+            "id": 3,
+            "nombre": "Supervisor"
+          },
+          "unidad": {
+            "id": 5,
+            "nombre": "Unidad Centro"
+          },
+          "fechaAlta": "2024-01-15",
+          "fechaBaja": null,
+          "fechaReingreso": null,
+          "estatus": "ACTIVO",
+          "departamento": {
+            "id": 10,
+            "nombre": "Operaciones"
+          },
+          "contacto": {
+            "telefono": "555-1234",
+            "email": "juan.garcia@example.com"
+          },
+          "sexo": "M",
+          "gestores": []
+        }
+      ],
+      "message": "Empleado"
+    }
+    ```
+
+    **Employee Object Fields:**
+    - `id` - Unique employee identifier
+    - `codigo` - Employee code/number
+    - `nombre` - First name
+    - `apellidoPaterno` - Paternal surname
+    - `apellidoMaterno` - Maternal surname
+    - `nombreCompleto` - Full name
+    - `puesto` - Position/job title object
+    - `unidad` - Unit/location assignment
+    - `fechaAlta` - Hire date
+    - `fechaBaja` - Termination date (null if active)
+    - `fechaReingreso` - Rehire date (if applicable)
+    - `estatus` - Employee status
+    - `departamento` - Department assignment
+    - `contacto` - Contact information
+    - `sexo` - Gender
+    - `gestores` - List of assigned managers/supervisors
+  </Step>
+</Steps>
+
+## Getting Supervisor List
+
+Retrieve a list of employees with supervisor roles.
+
+<Steps>
+  <Step title="Query supervisors">
+    **Endpoint:** `GET /empleados/supervisores`
+
+    **Query Parameters:**
+    - `activos` (optional) - Filter by active status (boolean)
+
+    **Example: Get all active supervisors**
+    ```bash
+    curl -X GET "https://api.example.com/empleados/supervisores?activos=true" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get all supervisors (active and inactive)**
+    ```bash
+    curl -X GET "https://api.example.com/empleados/supervisores" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Review supervisor data">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": [
+        {
+          "id": 45,
+          "codigo": "SUP001",
+          "nombreCompleto": "María Rodríguez Pérez",
+          "puesto": {
+            "id": 2,
+            "nombre": "Supervisor de Area"
+          },
+          "unidad": {
+            "id": 5,
+            "nombre": "Unidad Centro"
+          },
+          "estatus": "ACTIVO"
+        },
+        {
+          "id": 67,
+          "codigo": "SUP002",
+          "nombreCompleto": "Carlos Hernández Silva",
+          "puesto": {
+            "id": 2,
+            "nombre": "Supervisor de Area"
+          },
+          "unidad": {
+            "id": 8,
+            "nombre": "Unidad Norte"
+          },
+          "estatus": "ACTIVO"
+        }
+      ],
+      "message": "Supervisores activos"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Getting Employee Details
+
+Retrieve complete details for a specific employee by ID.
+
+<Steps>
+  <Step title="Request employee details">
+    **Endpoint:** `GET /empleados/{id}/detalles`
+
+    **Path Parameters:**
+    - `id` - Employee ID (required)
+
+    ```bash
+    curl -X GET "https://api.example.com/empleados/123/detalles" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Access detailed information">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": {
+        "id": 123,
+        "codigo": "EMP001",
+        "nombre": "Juan",
+        "apellidoPaterno": "García",
+        "apellidoMaterno": "López",
+        "nombreCompleto": "Juan García López",
+        "puesto": {
+          "id": 3,
+          "nombre": "Supervisor"
+        },
+        "unidad": {
+          "id": 5,
+          "nombre": "Unidad Centro",
+          "direccion": "Av. Principal 123",
+          "zona": {
+            "id": 2,
+            "nombre": "Zona Centro"
+          }
+        },
+        "fechaAlta": "2024-01-15",
+        "fechaBaja": null,
+        "fechaReingreso": null,
+        "estatus": "ACTIVO",
+        "departamento": {
+          "id": 10,
+          "nombre": "Operaciones",
+          "descripcion": "Departamento de Operaciones"
+        },
+        "contacto": {
+          "telefono": "555-1234",
+          "email": "juan.garcia@example.com",
+          "celular": "555-5678"
+        },
+        "sexo": "M",
+        "gestores": [
+          {
+            "id": 45,
+            "nombreCompleto": "María Rodríguez Pérez",
+            "tipo": "SUPERVISOR"
+          }
+        ]
+      },
+      "message": "Detalles de empleado"
+    }
+    ```
+
+    This endpoint returns complete employee information including:
+    - Full personal information
+    - Position and department details
+    - Unit assignment with location
+    - Contact information
+    - Manager/supervisor assignments
+    - Employment dates and status
+  </Step>
+</Steps>
+
+## Employee Status Values
+
+Common employee status values in the system:
+
+- `ACTIVO` - Active employee
+- `BAJA` - Terminated employee
+- `SUSPENDIDO` - Suspended employee
+- `LICENCIA` - Employee on leave
+
+## Filtering Best Practices
+
+### Combining Filters
+
+You can combine multiple filter parameters for precise queries:
+
+```bash
+curl -X GET "https://api.example.com/empleados?unidadId=5&departamentoId=10&activos=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+This returns all active employees in unit 5 and department 10.
+
+### Performance Considerations
+
+- Use specific filters when possible to reduce response size
+- Filter by `activos=true` when you only need current employees
+- Combine `unidadId` and `departamentoId` for targeted queries
+- Use employee code for exact lookups
+
+## Common Use Cases
+
+### Get all active employees in a specific location
+
+```bash
+curl -X GET "https://api.example.com/empleados?unidadId=5&activos=true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Find employees by supervisor
+
+```bash
+curl -X GET "https://api.example.com/empleados?supervisorId=45" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Get employees in a specific department and position
+
+```bash
+curl -X GET "https://api.example.com/empleados?departamentoId=10&puestoId=3" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Search for a specific employee by code
+
+```bash
+curl -X GET "https://api.example.com/empleados?codigo=EMP001" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Reference
+
+**Controller:** `EmpleadoController.java` at `/empleado/controller/EmpleadoController.java:1`
+
+**Related Models:**
+- `Empleado.java` - Employee entity model
+- `FiltroEmpleado` - Employee filter parameters
+- `Puesto` - Position/job title
+- `Unidad` - Unit/location
+- `Departamento` - Department
+- `Contacto` - Contact information
+- `Gestor` - Manager/supervisor relationship
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Attendance Recording" icon="clock" href="/guides/attendance-recording">
+    Record and manage employee attendance
+  </Card>
+  <Card title="Reports Generation" icon="chart-line" href="/guides/reports-generation">
+    Generate reports based on employee data
+  </Card>
+</CardGroup>

@@ -1,0 +1,131 @@
+---
+title: Observations Overview
+description: Manage workplace observations, incidents, and follow-ups
+---
+
+## Overview
+
+The Observations API allows you to track workplace observations, incidents, safety concerns, and other noteworthy events. Observations can be categorized by type, priority, and status, with support for follow-up tracking and departmental routing.
+
+## Core Concepts
+
+### Observation (Observación)
+
+An observation is a recorded event, incident, or noteworthy situation that requires documentation and potentially follow-up action. Examples include:
+
+- Safety incidents or near-misses
+- Quality issues
+- Equipment malfunctions
+- Process improvements
+- Employee recognition
+- Policy violations
+
+### Observation Attributes
+
+- **Folio**: Unique identifier/tracking number
+- **Title**: Brief description
+- **Type**: Category of observation
+- **Priority**: Urgency level (ALTA, MEDIA, BAJA)
+- **Status**: Current state (e.g., Abierta, En Proceso, Resuelta)
+- **Private**: Whether observation is confidential
+- **Requires Follow-up**: Flag for tracking actions
+
+### Departmental Routing
+
+Observations can be associated with multiple departments:
+
+- **Origin Department** (`departamentoGeneraId`): Where the observation originated
+- **Responsible Department** (`departamentoResponsableId`): Who should address it
+- **Collaborator Department** (`departamentoColaboradorId`): Supporting department
+
+### Status Workflow
+
+Observations progress through different statuses:
+
+1. **Abierta** (Open): Newly created
+2. **En Proceso** (In Progress): Being addressed
+3. **Resuelta** (Resolved): Action completed
+4. **Cerrada** (Closed): Finalized and archived
+
+Each status can have a custom background color for visual identification.
+
+## Base URL
+
+All observation endpoints are prefixed with:
+
+```
+/comialex/api/integra/observaciones
+```
+
+## Authentication
+
+All observation endpoints require JWT authentication. Include the Bearer token in the Authorization header:
+
+```http
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+See [Authentication](/authentication) for details on obtaining and using tokens.
+
+## Common Response Format
+
+All endpoints return responses in the standard `ResponseData` wrapper format:
+
+```json
+{
+  "data": <response_data>,
+  "message": "Success message",
+  "success": true,
+  "timestamp": 1709644800000
+}
+```
+
+## Privacy and Access Control
+
+### Private Observations
+
+Observations can be marked as private (`privado: true`), which restricts visibility:
+
+- Only the creator and authorized personnel can view
+- Not included in general unit queries unless explicitly filtered
+- Useful for sensitive incidents or HR matters
+
+### Public Observations
+
+Public observations (`privado: false`) are visible to:
+
+- All users in the same unit
+- Supervisors with appropriate permissions
+- Users with read access to the relevant departments
+
+## Observation Summary Structure
+
+```json
+{
+  "id": 123,
+  "folioObservacion": "OBS-2026-001234",
+  "unidadId": 5,
+  "unidadNombreCompleto": "Planta Principal - Producción",
+  "tipoObservacionNombre": "Seguridad",
+  "estatusNombre": "Abierta",
+  "estatusColorBg": "#FF5722",
+  "departamentoOrigenNombre": "Producción",
+  "titulo": "Fuga de líquido en línea 3",
+  "prioridad": "ALTA",
+  "requiereSeguimiento": true,
+  "creado": "2026-03-05T14:30:00",
+  "modificado": "2026-03-05T14:30:00"
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Observation Management" icon="clipboard-list" href="/api/observations/management">
+    Query and update observations
+  </Card>
+  
+  <Card title="Authentication" icon="lock" href="/authentication">
+    Learn about API authentication
+  </Card>
+</CardGroup>

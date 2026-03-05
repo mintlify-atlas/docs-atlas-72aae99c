@@ -1,0 +1,399 @@
+---
+title: 'Zones API'
+description: 'Manage geographical zones for organizational units'
+---
+
+# Zones API
+
+The Zones API provides CRUD operations for managing geographical zones (zonas), which are used to group and organize units by location or region.
+
+## Endpoints
+
+### Get All Zones
+
+Retrieves a list of all zones in the organization.
+
+<CodeGroup>
+```bash cURL
+curl -X GET "https://api.integra.com/zonas" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/zonas', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/zonas"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `GET`
+
+**Endpoint:** `/zonas`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Zona Norte",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "nombre": "Zona Sur",
+      "activo": true
+    },
+    {
+      "id": 3,
+      "nombre": "Zona Centro",
+      "activo": false
+    }
+  ],
+  "message": "Zonas"
+}
+```
+
+### Create Zone
+
+Registers a new geographical zone.
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.integra.com/zonas" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Zona Este"
+  }'
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/zonas', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    nombre: 'Zona Este'
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/zonas"
+headers = {
+  "Authorization": "Bearer YOUR_TOKEN",
+  "Content-Type": "application/json"
+}
+payload = {
+  "nombre": "Zona Este"
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `POST`
+
+**Endpoint:** `/zonas`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+- `Content-Type`: application/json (required)
+
+**Body Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `nombre` | String | Yes | Name of the zone (cannot be blank) |
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": true,
+  "message": "Zona registrada"
+}
+```
+
+### Update Zone
+
+Updates an existing zone, including its name and active status.
+
+<CodeGroup>
+```bash cURL
+curl -X PUT "https://api.integra.com/zonas" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 1,
+    "nombre": "Zona Norte Actualizada",
+    "activo": true
+  }'
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/zonas', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    id: 1,
+    nombre: 'Zona Norte Actualizada',
+    activo: true
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/zonas"
+headers = {
+  "Authorization": "Bearer YOUR_TOKEN",
+  "Content-Type": "application/json"
+}
+payload = {
+  "id": 1,
+  "nombre": "Zona Norte Actualizada",
+  "activo": True
+}
+
+response = requests.put(url, headers=headers, json=payload)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `PUT`
+
+**Endpoint:** `/zonas`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+- `Content-Type`: application/json (required)
+
+**Body Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | Integer | Yes | ID of the zone to update |
+| `nombre` | String | Yes | Updated name of the zone (cannot be blank) |
+| `activo` | Boolean | Yes | Active status of the zone |
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": true,
+  "message": "Zona actualizada"
+}
+```
+
+### Delete Zone
+
+Permanently deletes a zone from the system.
+
+<Warning>
+  Deleting a zone is a permanent operation. Ensure that no units are assigned to this zone before deletion, as this may cause referential integrity issues.
+</Warning>
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE "https://api.integra.com/zonas/3" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/zonas/3', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/zonas/3"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+
+response = requests.delete(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `DELETE`
+
+**Endpoint:** `/zonas/{id}`
+
+**Path Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | Integer | ID of the zone to delete |
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": true,
+  "message": "Zona eliminada"
+}
+```
+
+## Entity Structure
+
+### Zone Entity
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | Integer | Unique identifier for the zone |
+| `nombre` | String | Name of the zone |
+| `activo` | Boolean | Indicates if the zone is active |
+
+## Status Values
+
+- `activo: true` - The zone is active and can be assigned to units
+- `activo: false` - The zone is inactive and should not be used for new assignments
+
+## Relationships
+
+Zones are geographical groupings that:
+- Can contain multiple organizational units
+- Help organize units by region or location
+- Are referenced when creating or updating units
+- May be used for reporting and analytics purposes
+
+## Validation Rules
+
+### Create Zone
+
+- `nombre`: Required, cannot be blank or null
+
+### Update Zone
+
+- `id`: Required, must reference an existing zone
+- `nombre`: Required, cannot be blank or null
+- `activo`: Required, must be a boolean value
+
+## Error Responses
+
+### Validation Error
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "nombre",
+      "message": "Debe establecer un nombre para la zona"
+    }
+  ]
+}
+```
+
+### Not Found Error
+
+**Status Code:** `404 Not Found`
+
+```json
+{
+  "error": "Zone not found",
+  "message": "No zone found with the specified ID"
+}
+```
+
+### Referential Integrity Error
+
+**Status Code:** `409 Conflict`
+
+```json
+{
+  "error": "Cannot delete zone",
+  "message": "This zone is referenced by one or more units and cannot be deleted"
+}
+```
+
+## Use Cases
+
+### Regional Organization
+
+Zones can be used to organize units by geographical regions:
+- North, South, East, West zones
+- State or province-based zones
+- Metropolitan vs. rural zones
+- International vs. domestic zones
+
+### Operational Management
+
+Zones enable:
+- Regional reporting and analytics
+- Zone-specific supervisor assignments
+- Geographical performance tracking
+- Resource allocation by region
+
+## Best Practices
+
+1. **Naming Convention**: Use clear, descriptive names for zones (e.g., "Zona Norte", "Región Metropolitana")
+2. **Status Management**: Instead of deleting zones with existing units, set them to inactive (`activo: false`)
+3. **Referential Integrity**: Before deleting a zone, ensure no units reference it
+4. **Hierarchical Organization**: Consider zone hierarchy if needed (e.g., regions containing zones)
+
+## Related Endpoints
+
+- [Units API](/api/organization/units) - Manage organizational units that belong to zones
+- [Employees API](/api/employees) - Manage employees assigned to units within zones

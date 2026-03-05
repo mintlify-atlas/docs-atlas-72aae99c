@@ -1,0 +1,420 @@
+---
+title: 'Reports Generation'
+description: 'Generate attendance reports, export to Excel, and analyze employee work patterns'
+---
+
+## Overview
+
+The Integra Reports API provides powerful endpoints to generate attendance reports in JSON and Excel formats, track inconsistencies, analyze monthly summaries, and identify employees without attendance records.
+
+## Generating Attendance Reports (JSON)
+
+Retrieve consolidated attendance data for employees in JSON format for custom processing and analysis.
+
+<Steps>
+  <Step title="Configure report parameters">
+    **Endpoint:** `GET /asistencia/reporte/asistencias`
+
+    **Query Parameters:**
+    - `empleadoId` - Filter by specific employee ID
+    - `desde` - Start date/time (LocalDateTime format: yyyy-MM-ddTHH:mm:ss)
+    - `hasta` - End date/time (LocalDateTime format: yyyy-MM-ddTHH:mm:ss)
+    - `unidadId` - Filter by unit/location
+    - `empleadoResponsableId` - Filter by responsible employee
+    - `supervisorId` - Filter by supervisor
+    - `zonaId` - Filter by zone
+    - `puestoId` - Filter by position
+
+    All parameters are optional but combining filters helps narrow down results.
+  </Step>
+
+  <Step title="Request the report">
+    **Example: Get attendance for a specific employee in a date range**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/asistencias?empleadoId=123&desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get attendance for all employees in a unit**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/asistencias?unidadId=5&desde=2026-03-01T00:00:00&hasta=2026-03-07T23:59:59" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get attendance by supervisor and zone**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/asistencias?supervisorId=45&zonaId=2&desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Process JSON response">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": [
+        {
+          "empleadoId": 123,
+          "empleadoCodigo": "EMP001",
+          "empleadoNombre": "Juan García López",
+          "fecha": "2026-03-05",
+          "horaInicio": "08:00:00",
+          "horaFin": "17:00:00",
+          "totalHoras": 9.0,
+          "totalPausas": 1.0,
+          "horasEfectivas": 8.0,
+          "unidad": "Unidad Centro",
+          "pausas": [
+            {
+              "tipo": "COMIDA",
+              "inicio": "13:00:00",
+              "fin": "14:00:00",
+              "duracion": 1.0
+            }
+          ],
+          "fotoInicio": "2026-03-05_08-00-123.jpg",
+          "fotoFin": "2026-03-05_17-00-123.jpg"
+        }
+      ],
+      "message": "Asistencia por empleados"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Generating Excel Reports
+
+Export detailed attendance reports with nested break information to Excel format for easy sharing and analysis.
+
+<Steps>
+  <Step title="Prepare Excel export parameters">
+    **Endpoint:** `GET /asistencia/reporte/asistencias/detallado/excel`
+
+    Uses the same filter parameters as the JSON endpoint:
+    - `empleadoId`
+    - `desde` and `hasta` (required for meaningful reports)
+    - `unidadId`
+    - `empleadoResponsableId`
+    - `supervisorId`
+    - `zonaId`
+    - `puestoId`
+  </Step>
+
+  <Step title="Download the Excel file">
+    **Example: Generate Excel report for a unit**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/asistencias/detallado/excel?unidadId=5&desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -o reporte-asistencias-marzo.xlsx
+    ```
+
+    **Example: Generate report for specific employee**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/asistencias/detallado/excel?empleadoId=123&desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -o asistencias-empleado-123.xlsx
+    ```
+  </Step>
+
+  <Step title="Review Excel output">
+    The downloaded Excel file includes:
+    - Employee information (code, name, position)
+    - Daily attendance records
+    - Start and end times
+    - Break details (nested with start/end times)
+    - Total hours worked
+    - Effective hours (minus breaks)
+    - Unit/location information
+
+    **Response Headers:**
+    ```
+    Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    Content-Disposition: attachment; filename="reporte-asistencias-detallado.xlsx"
+    ```
+  </Step>
+</Steps>
+
+## Detecting Attendance Inconsistencies
+
+Identify attendance records with anomalies, missing data, or validation issues.
+
+<Steps>
+  <Step title="Query inconsistencies">
+    **Endpoint:** `GET /asistencia/reporte/inconsistencias`
+
+    **Query Parameters:**
+    - `fechaInicio` - Start date
+    - `fechaFin` - End date
+    - `empleadoId` - Filter by employee (optional)
+
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/inconsistencias?fechaInicio=2026-03-01&fechaFin=2026-03-31" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Check inconsistencies for specific employee**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/inconsistencias?fechaInicio=2026-03-01&fechaFin=2026-03-31&empleadoId=123" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Analyze inconsistency data">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": [
+        {
+          "id": 789,
+          "empleadoId": 123,
+          "empleadoNombre": "Juan García López",
+          "fecha": "2026-03-05",
+          "tipo": "SIN_FINALIZACION",
+          "descripcion": "Jornada iniciada pero no finalizada",
+          "horaInicio": "08:00:00",
+          "horaFin": null
+        },
+        {
+          "id": 790,
+          "empleadoId": 145,
+          "empleadoNombre": "María Rodríguez",
+          "fecha": "2026-03-06",
+          "tipo": "PAUSA_ABIERTA",
+          "descripcion": "Pausa iniciada sin finalizar",
+          "horaInicio": "13:00:00",
+          "horaFin": null
+        }
+      ],
+      "message": "Inconsistencias de asistencia"
+    }
+    ```
+
+    **Common Inconsistency Types:**
+    - `SIN_FINALIZACION` - Shift started but not ended
+    - `PAUSA_ABIERTA` - Break started but not closed
+    - `HORARIO_IRREGULAR` - Unusual working hours
+    - `DUPLICADO` - Duplicate attendance records
+  </Step>
+</Steps>
+
+## Monthly Attendance Summary
+
+Get a summary of worked and non-worked days for an employee in a specific month.
+
+<Steps>
+  <Step title="Request monthly summary">
+    **Endpoint:** `GET /asistencia/reporte/resumen-mes`
+
+    **Query Parameters:**
+    - `empleadoId` - Employee ID (required)
+    - `anio` - Year (optional, defaults to current year)
+    - `mes` - Month 1-12 (optional, defaults to current month)
+
+    **Example: Get summary for current month**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/resumen-mes?empleadoId=123" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get summary for specific month**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/resumen-mes?empleadoId=123&anio=2026&mes=3" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Review monthly statistics">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": {
+        "empleadoId": 123,
+        "empleadoNombre": "Juan García López",
+        "anio": 2026,
+        "mes": 3,
+        "totalDiasLaborados": 22,
+        "totalDiasNoLaborados": 9,
+        "totalHoras": 176.0,
+        "promedioHorasDiarias": 8.0,
+        "diasConInconsistencias": 1
+      },
+      "message": "Resumen de asistencia del mes"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Getting Worked Days in a Month
+
+Retrieve the specific dates when an employee had attendance records.
+
+<Steps>
+  <Step title="Query worked days">
+    **Endpoint:** `GET /asistencia/reporte/dias-laborados`
+
+    **Query Parameters:**
+    - `empleadoId` - Employee ID (required)
+    - `anio` - Year (required, e.g., 2026)
+    - `mes` - Month 1-12 (required, e.g., 3 for March)
+
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/dias-laborados?empleadoId=123&anio=2026&mes=3" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Process worked days list">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": [
+        "2026-03-01",
+        "2026-03-02",
+        "2026-03-03",
+        "2026-03-04",
+        "2026-03-05",
+        "2026-03-08",
+        "2026-03-09",
+        "2026-03-10"
+      ],
+      "message": "Días laborados en el mes"
+    }
+    ```
+
+    This returns a list of dates in `yyyy-MM-dd` format representing days the employee had attendance records.
+  </Step>
+</Steps>
+
+## Identifying Employees Without Attendance
+
+Find employees who did not register attendance in a specified date range.
+
+<Steps>
+  <Step title="Configure absence filters">
+    **Endpoint:** `GET /asistencia/reporte/empleados-sin-asistencia`
+
+    **Query Parameters:**
+    - `desde` - Start date (required)
+    - `hasta` - End date (required)
+    - `unidadId` - Filter by unit (optional)
+    - `puestoId` - Filter by position (optional)
+    - `zonaId` - Filter by zone (optional)
+    - `supervisorId` - Filter by supervisor (optional)
+  </Step>
+
+  <Step title="Request absence report">
+    **Example: Get employees without attendance in date range**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/empleados-sin-asistencia?desde=2026-03-01T00:00:00&hasta=2026-03-07T23:59:59" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Filter by unit and supervisor**
+    ```bash
+    curl -X GET "https://api.example.com/asistencia/reporte/empleados-sin-asistencia?desde=2026-03-01T00:00:00&hasta=2026-03-07T23:59:59&unidadId=5&supervisorId=45" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Review absence data">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": [
+        {
+          "fecha": "2026-03-05",
+          "empleados": [
+            {
+              "empleadoId": 234,
+              "codigo": "EMP002",
+              "nombreCompleto": "Pedro Martínez Santos",
+              "puesto": "Operador",
+              "unidad": "Unidad Centro",
+              "supervisor": "María Rodríguez"
+            },
+            {
+              "empleadoId": 345,
+              "codigo": "EMP003",
+              "nombreCompleto": "Ana López Fernández",
+              "puesto": "Operador",
+              "unidad": "Unidad Centro",
+              "supervisor": "María Rodríguez"
+            }
+          ]
+        }
+      ],
+      "message": "Inasistencias agrupadas por fecha"
+    }
+    ```
+
+    Results are grouped by date, showing which employees had no attendance records for each day.
+  </Step>
+</Steps>
+
+## Viewing Attendance Photos
+
+Retrieve the photos captured during attendance registration.
+
+**Endpoint:** `GET /asistencia/reporte/{filename}`
+
+```bash
+curl -X GET "https://api.example.com/asistencia/reporte/2026-03-05_08-00-123.jpg" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -o attendance-photo.jpg
+```
+
+Images are automatically resized to 300x300 pixels and returned as JPEG.
+
+## Report Best Practices
+
+### Date Range Selection
+
+- Use specific date ranges to improve performance
+- For monthly reports, use the first and last day of the month
+- Include time component (00:00:00 to 23:59:59) for complete day coverage
+
+### Filter Combinations
+
+**By organizational structure:**
+```
+?unidadId=5&departamentoId=10&desde=...&hasta=...
+```
+
+**By supervision:**
+```
+?supervisorId=45&zonaId=2&desde=...&hasta=...
+```
+
+**By position:**
+```
+?puestoId=3&unidadId=5&desde=...&hasta=...
+```
+
+### Performance Tips
+
+- Narrow date ranges for faster responses
+- Use Excel export for large datasets
+- Apply unit/department filters to reduce data volume
+- Schedule reports during off-peak hours for large exports
+
+## Reference
+
+**Controller:** `ReporteQueryController.java` at `/asistencia/controller/ReporteQueryController.java:1`
+
+**Related Models:**
+- `EmpleadoReporteRequest.java` - Report filter parameters
+- `EmpleadoReporte` - Employee report data structure
+- `ResumenMesAsistencia` - Monthly summary model
+- `InasistenciaPorFechaResponse` - Absence by date response
+- `Incidencia` - Inconsistency/incident model
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Attendance Recording" icon="clock" href="/guides/attendance-recording">
+    Record attendance data for reporting
+  </Card>
+  <Card title="Employee Management" icon="users" href="/guides/employee-management">
+    Manage employee information
+  </Card>
+</CardGroup>

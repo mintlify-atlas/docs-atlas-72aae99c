@@ -1,0 +1,91 @@
+---
+title: 'End Shift'
+api: 'POST /asistencia/finalizar'
+description: 'Finalizes an employee work shift'
+---
+
+## Overview
+
+This endpoint registers the end of an employee's work shift. It captures the employee's photo, location, and timestamp to mark the completion of their workday. Optionally includes a flag for cash deposit completion.
+
+## Request Body
+
+<ParamField body="empleadoId" type="integer" required>
+  The unique identifier of the employee ending their shift
+</ParamField>
+
+<ParamField body="unidadId" type="integer" required>
+  The ID of the unit/location where the employee is ending their shift
+</ParamField>
+
+<ParamField body="finDeposito" type="boolean">
+  Indicates whether the cash deposit has been completed at shift end (optional)
+</ParamField>
+
+<ParamField body="foto" type="string">
+  Base64-encoded photo of the employee for attendance verification (optional)
+</ParamField>
+
+<ParamField body="unidadAsignadaId" type="integer">
+  The ID of the employee's assigned unit (optional)
+</ParamField>
+
+<ParamField body="hora" type="string">
+  Custom time for shift end in HH:mm:ss format (optional). If not provided, current time is used
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="null">
+  No data is returned for this endpoint
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message: "Jornada finalizada"
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X POST https://api.integra.com/asistencia/finalizar \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "empleadoId": 123,
+    "unidadId": 5,
+    "finDeposito": true,
+    "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+    "unidadAsignadaId": 5,
+    "hora": "17:30:00"
+  }'
+```
+
+## Response Example
+
+```json Success Response
+{
+  "success": true,
+  "data": null,
+  "message": "Jornada finalizada"
+}
+```
+
+```json Error Response
+{
+  "success": false,
+  "message": "No hay jornada activa para finalizar"
+}
+```
+
+## Business Rules
+
+- An employee must have an active shift in progress to finalize it
+- The `empleadoId` and `unidadId` are mandatory fields
+- The `finDeposito` flag is important for cash-handling positions to track deposit completion
+- If `hora` is not provided, the system uses the current server time
+- The shift end time must be after the shift start time
+- Unit validation ensures the employee is ending their shift at a valid location

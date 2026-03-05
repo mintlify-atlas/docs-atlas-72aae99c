@@ -1,0 +1,490 @@
+---
+title: 'Access Control'
+description: 'Understanding authentication, authorization, and role-based access control in Integra'
+---
+
+## Overview
+
+Integra uses a comprehensive Role-Based Access Control (RBAC) system with JWT authentication. The system supports fine-grained permissions, hierarchical security nodes, and flexible role management.
+
+## Authentication Architecture
+
+### JWT-Based Authentication
+
+The system uses JSON Web Tokens (JWT) for stateless authentication:
+
+```java
+@RestController
+@RequestMapping("auth")
+public class LoginController {
+    private final LoginService loginHandler;
+    
+    @PostMapping("/login")
+    public ResponseEntity<JWTResponse> login(@RequestBody @Valid AccesoRequest request) {
+        return ResponseEntity.ok(loginHandler.login(request));
+    }
+}
+```
+
+**Login response structure:**
+
+```java
+public class JWTResponse {
+    private String token;              // JWT access token
+    private Empleado employeeName;     // Employee information
+    private List<String> uiPermissions; // UI permissions for the user
+}
+```
+
+### JWT Token Structure
+
+Tokens contain:
+- **Subject**: Username
+- **Authorities**: List of roles and permissions
+- **Expiration**: Token validity period
+- **Custom claims**: Additional user metadata
+
+### Request Filter
+
+Every authenticated request passes through the JWT filter:
+
+```java
+@Component
+public class JwtRequestFilter extends OncePerRequestFilter {
+    private final JwtUtil jwtUtil;
+    private final RoleService roleService;
+    
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, 
+                                   HttpServletResponse response, 
+                                   FilterChain filterChain) {
+        final String authHeader = request.getHeader("Authorization");
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+        final String token = authHeader.substring(7);
+        
+        // Validate and extract claims
+        Claims claims = jwtUtil.validateAndExtract(token);
+        String username = claims.getSubject();
+        
+        // Extract authorities from token
+        List<String> rawAuthorities = claims.get("authorities", List.class);
+        
+        // Expand permissions (Roles -> Permissions)
+        Set<SimpleGrantedAuthority> authorities = expandPermissions(rawAuthorities);
+        
+        // Create authentication
+        UsernamePasswordAuthenticationToken authToken = 
+            new UsernamePasswordAuthenticationToken(username, null, authorities);
+        
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+    }
+}
+```
+
+**Key features:**
+- Extracts JWT from Authorization header
+- Validates token signature and expiration
+- Expands role IDs to their full permission sets
+- Sets Spring Security context
+
+<Info>
+The filter automatically skips certain paths like `/auth/`, `/public/`, and `/actuator/` for public access.
+</Info>
+
+## User Model
+
+```java
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Size(max = 50)
+    @NotNull
+    private String username;
+    
+    @Size(max = 100)
+    private String email;
+    
+    @Size(max = 255)
+    @NotNull
+    private String password;  // BCrypt encrypted
+    
+    @NotNull
+    @ColumnDefault("1")
+    private Boolean activo;
+    
+    private Integer empleadoId;  // Link to employee record
+    
+    @ColumnDefault("0")
+    private Boolean requierCambioPassword;
+    
+    @ManyToMany
+    @JoinTable(name = "user_roles",
+               joinColumns = @JoinColumn(name = "user_id"),
+               inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
+    
+    @ElementCollection
+    @CollectionTable(name = "user_permissions",
+                     joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "permission_id")
+    private Set<String> directPermissionIds = new HashSet<>();
+}
+```
+
+**Key features:**
+- **Unique constraints**: username, email, empleadoId must be unique
+- **Password**: Stored using BCrypt encryption
+- **Active status**: Accounts can be disabled without deletion
+- **Employee link**: Optional connection to employee record
+- **Roles**: Many-to-many relationship with roles
+- **Direct permissions**: User-specific permissions override role permissions
+
+## Role Model
+
+```java
+@Entity
+@Table(name = "roles")
+public class Role {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String name;
+    
+    private String description;
+    
+    private boolean activo = true;
+    
+    @NotNull
+    @ColumnDefault("1")
+    private Long version = 1L;
+    
+    @ElementCollection
+    @CollectionTable(name = "role_permissions",
+                     joinColumns = @JoinColumn(name = "role_id"))
+    @Column(name = "permission_id")
+    private Set<String> permissionIds;
+    
+    @Column(name = "is_default", nullable = false)
+    private boolean isDefault = false;
+}
+```
+
+**Role features:**
+- **Name and description**: Human-readable role identification
+- **Active status**: Roles can be deactivated
+- **Version tracking**: Supports role version management
+- **Permission set**: Collection of permission IDs
+- **Default role**: Can be auto-assigned to new users
+
+### Role Management Endpoints
+
+```java
+@RestController
+public class RoleController {
+    // GET /roles - List all roles
+    // GET /roles/{id} - Get role details
+    // POST /roles - Create new role
+    // PUT /roles/{id} - Update role
+    // PATCH /roles/{id}/permissions - Update role permissions
+    // DELETE /roles/{id} - Delete role
+}
+```
+
+## Permission System
+
+### Security Nodes
+
+Permissions are organized in a hierarchical tree structure:
+
+```java
+@Entity
+@Table(name = "security_node")
+public class SecurityNode {
+    @Id
+    @Size(max = 50)
+    private String id;  // Unique permission identifier
+    
+    @Size(max = 120)
+    @NotNull
+    private String name;  // Display name
+    
+    @Enumerated(EnumType.STRING)
+    private NodeType type;  // MODULE, FUNCTION, ACTION
+    
+    @Size(max = 50)
+    private String parentId;  // Parent node in hierarchy
+    
+    @NotNull
+    @ColumnDefault("0")
+    private Integer nivel;  // Depth in tree
+    
+    @NotNull
+    @ColumnDefault("0")
+    private Integer orden;  // Display order
+    
+    @NotNull
+    @ColumnDefault("1")
+    private Boolean activo;
+}
+```
+
+### Node Types
+
+```java
+public enum NodeType {
+    MODULE,    // Top-level module (e.g., "Attendance Management")
+    FUNCTION,  // Function within module (e.g., "Reports")
+    ACTION     // Specific action (e.g., "Export Report")
+}
+```
+
+### Permission Hierarchy Example
+
+```
+MODULE: attendance
+  ├─ FUNCTION: attendance.manage
+  │   ├─ ACTION: attendance.manage.create
+  │   ├─ ACTION: attendance.manage.update
+  │   └─ ACTION: attendance.manage.delete
+  └─ FUNCTION: attendance.reports
+      ├─ ACTION: attendance.reports.view
+      └─ ACTION: attendance.reports.export
+
+MODULE: employees
+  ├─ FUNCTION: employees.manage
+  │   ├─ ACTION: employees.manage.create
+  │   └─ ACTION: employees.manage.update
+  └─ FUNCTION: employees.view
+```
+
+## Permission Expansion
+
+The system automatically expands role-based permissions:
+
+```java
+private Set<SimpleGrantedAuthority> expandPermissions(List<String> rawAuthorities) {
+    if (rawAuthorities == null || rawAuthorities.isEmpty()) 
+        return Set.of();
+    
+    Set<SimpleGrantedAuthority> expanded = new HashSet<>();
+    
+    for (String auth : rawAuthorities) {
+        if (auth.startsWith("ROLE_")) {
+            // Extract role ID
+            Long rolId = Long.parseLong(auth.substring(5));
+            Rol rol = roleService.obtenerRolPorId(rolId);
+            
+            // Add all permissions from role
+            if (rol != null && rol.getPermisos() != null) {
+                for (var p : rol.getPermisos()) {
+                    expanded.add(new SimpleGrantedAuthority(p.getId()));
+                }
+            }
+        } else {
+            // Direct permission
+            expanded.add(new SimpleGrantedAuthority(auth));
+        }
+    }
+    return expanded;
+}
+```
+
+**Process:**
+1. Receives list of authorities from JWT token
+2. Identifies role references (`ROLE_{id}`)
+3. Fetches role from database
+4. Expands role to its full permission set
+5. Includes direct permissions as-is
+6. Returns combined authority set
+
+<Note>
+Permission expansion happens on every request, but role data is typically cached for performance.
+</Note>
+
+## Security Configuration
+
+### Spring Security Setup
+
+```java
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+    private final CustomUserDetailsService userDetailsService;
+    private final JwtRequestFilter jwtRequestFilter;
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // Public endpoints
+                .requestMatchers("/auth/login", "/auth/refresh", 
+                                "/auth/forgot-password").permitAll()
+                .requestMatchers("/estados/**").permitAll()
+                .requestMatchers("/asistencia/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/unidades/**").permitAll()
+                
+                // Kiosk public endpoints
+                .requestMatchers(HttpMethod.GET, "/kioscos", "/kioscos/*").permitAll()
+                .requestMatchers(HttpMethod.POST, "/kioscos/*/codigos/*/usar").permitAll()
+                .requestMatchers(HttpMethod.PATCH, "/kioscos/*/requiere-codigo").permitAll()
+                
+                // Protected endpoints
+                .requestMatchers("/kioscos/**").authenticated()
+                .requestMatchers("/auth/register", "/auth/user/**").authenticated()
+                .anyRequest().authenticated())
+            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        return http.build();
+    }
+}
+```
+
+**Security features:**
+- **CSRF disabled**: Stateless JWT doesn't require CSRF protection
+- **Stateless sessions**: No server-side session storage
+- **Public endpoints**: Login, password reset, and kiosk operations
+- **Protected endpoints**: User management and admin functions
+- **JWT filter**: Runs before standard authentication
+
+### Public vs Protected Endpoints
+
+**Public (no authentication required):**
+- `/auth/login` - User login
+- `/auth/refresh` - Token refresh
+- `/auth/forgot-password` - Password reset request
+- `/asistencia/**` - Attendance registration (for kiosks)
+- `/kioscos` - Kiosk information
+- `/estados/**` - State/location data
+
+**Protected (authentication required):**
+- `/auth/register` - User registration (admin only)
+- `/auth/user/**` - User management
+- `/kioscos/**` (write operations) - Kiosk configuration
+- Most other endpoints
+
+## User Management
+
+### User Registration
+
+```java
+@RestController
+public class RegistroCuentaController {
+    // POST /auth/register-request - Request account
+    // POST /auth/validate-registration-token - Validate token
+    // POST /auth/register-confirm - Complete registration
+}
+```
+
+### User Operations
+
+```java
+@RestController
+public class UserController {
+    // GET /users - List users
+    // GET /users/{id} - Get user details
+    // POST /users - Create user
+    // PUT /users/{id} - Update user
+    // PATCH /users/{id}/roles - Update user roles
+    // DELETE /users/{id} - Delete user
+}
+```
+
+### Password Management
+
+```java
+@RestController
+public class PasswordResetController {
+    // POST /auth/forgot-password - Request reset
+    // POST /auth/validate-reset-token - Validate token
+    // POST /auth/reset-password - Complete reset
+}
+```
+
+## Token Versioning
+
+The system supports token version tracking to invalidate old sessions:
+
+```java
+@Entity
+public class TokenVersion {
+    @Id
+    private Long userId;
+    
+    @NotNull
+    private Long version;
+}
+```
+
+**Use cases:**
+- Password changes invalidate all existing tokens
+- Force logout across all devices
+- Security breach response
+
+## Method-Level Security
+
+Use Spring Security annotations for fine-grained access control:
+
+```java
+@PreAuthorize("hasAuthority('attendance.manage.create')")
+public void createAttendance() { ... }
+
+@PreAuthorize("hasRole('ADMIN')")
+public void adminOperation() { ... }
+
+@PreAuthorize("hasAnyAuthority('attendance.view', 'attendance.manage')")
+public void viewAttendance() { ... }
+```
+
+## Best Practices
+
+### Password Security
+
+- Passwords are encrypted with BCrypt
+- Password strength requirements should be enforced at application level
+- Use `requierCambioPassword` flag for forced password changes
+- Implement password expiration policies
+
+### Role Design
+
+1. **Principle of least privilege**: Grant minimum necessary permissions
+2. **Group by function**: Create roles based on job functions
+3. **Use hierarchy**: Leverage security node hierarchy for organization
+4. **Default roles**: Use for common access patterns
+
+### Token Management
+
+- Set appropriate expiration times
+- Implement token refresh mechanism
+- Invalidate tokens on security events
+- Store tokens securely on client side
+
+### Permission Naming
+
+Use consistent, hierarchical naming:
+- Format: `{module}.{function}.{action}`
+- Example: `employees.manage.create`, `reports.attendance.export`
+- Avoid special characters except dots and underscores
+
+## Related Concepts
+
+- [Organizational Structure](/concepts/organizational-structure) - Employee and role relationships
+- [Kiosk Mode](/concepts/kiosk-mode) - Public access for attendance

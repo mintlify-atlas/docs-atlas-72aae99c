@@ -1,0 +1,221 @@
+---
+title: 'Query Attendance'
+description: 'Retrieve employee attendance and shift information'
+---
+
+## Overview
+
+These endpoints allow you to query the current attendance status and shift information for employees. They are primarily used by the kiosk system to display employee information and validate attendance actions.
+
+---
+
+## Get Employee by NIP
+
+<api method="GET" endpoint="/asistencia/{nip}" />
+
+Retrieves employee attendance information using their NIP (Personal Identification Number).
+
+### Path Parameters
+
+<ParamField path="nip" type="string" required>
+  The employee's personal identification number (NIP/PIN)
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Employee attendance information object
+  
+  <ResponseField name="id" type="integer">
+    Employee's unique identifier
+  </ResponseField>
+  
+  <ResponseField name="clave" type="string">
+    Employee's code/key
+  </ResponseField>
+  
+  <ResponseField name="nombre" type="string">
+    Employee's full name
+  </ResponseField>
+  
+  <ResponseField name="jornadaIniciada" type="boolean">
+    Indicates whether the employee currently has an active shift in progress
+  </ResponseField>
+  
+  <ResponseField name="esNocturno" type="boolean">
+    Indicates whether the employee works night shift
+  </ResponseField>
+  
+  <ResponseField name="tipoPausa" type="string">
+    Type of active break if any ("COMIDA", "OTRA", or null if no active break)
+  </ResponseField>
+  
+  <ResponseField name="unidadAsignadaId" type="integer">
+    ID of the unit/location assigned to the employee
+  </ResponseField>
+  
+  <ResponseField name="puestoId" type="integer">
+    ID of the employee's position/job role
+  </ResponseField>
+  
+  <ResponseField name="puestoNombre" type="string">
+    Name of the employee's position/job role
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message: "Jornada de empleado consultado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET https://api.integra.com/asistencia/1234 \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Response Example
+
+```json Success Response
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "clave": "EMP001",
+    "nombre": "Juan Pérez García",
+    "jornadaIniciada": true,
+    "esNocturno": false,
+    "tipoPausa": "COMIDA",
+    "unidadAsignadaId": 5,
+    "puestoId": 10,
+    "puestoNombre": "Cajero"
+  },
+  "message": "Jornada de empleado consultado"
+}
+```
+
+```json Employee Without Active Shift
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "clave": "EMP001",
+    "nombre": "Juan Pérez García",
+    "jornadaIniciada": false,
+    "esNocturno": false,
+    "tipoPausa": null,
+    "unidadAsignadaId": 5,
+    "puestoId": 10,
+    "puestoNombre": "Cajero"
+  },
+  "message": "Jornada de empleado consultado"
+}
+```
+
+```json Error Response
+{
+  "success": false,
+  "message": "El PIN no puede estar vacío"
+}
+```
+
+---
+
+## Get Employee by ID
+
+<api method="GET" endpoint="/asistencia/{id}/perfil" />
+
+Retrieves employee attendance information using their employee ID. This endpoint is typically used for administrative interfaces or when the employee ID is already known.
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The employee's unique identifier
+</ParamField>
+
+### Response
+
+The response structure is identical to the "Get Employee by NIP" endpoint.
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Employee attendance information object (same structure as NIP endpoint)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message: "Jornada de empleado consultado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET https://api.integra.com/asistencia/123/perfil \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Response Example
+
+```json Success Response
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "clave": "EMP001",
+    "nombre": "Juan Pérez García",
+    "jornadaIniciada": true,
+    "esNocturno": true,
+    "tipoPausa": null,
+    "unidadAsignadaId": 5,
+    "puestoId": 10,
+    "puestoNombre": "Supervisor de Turno"
+  },
+  "message": "Jornada de empleado consultado"
+}
+```
+
+```json Error Response
+{
+  "success": false,
+  "message": "El ID no puede estar vacío"
+}
+```
+
+---
+
+## Use Cases
+
+### Kiosk Interface
+The kiosk uses these endpoints to:
+- Display employee information when they enter their NIP
+- Show current shift status (active/inactive)
+- Display active break status
+- Determine which attendance actions are available
+
+### Shift Status Validation
+Before performing attendance actions, the system checks:
+- Whether the employee has an active shift (`jornadaIniciada`)
+- Whether the employee is on break (`tipoPausa`)
+- Employee's shift type (`esNocturno`)
+
+### Administrative Dashboards
+Administrators can use these endpoints to:
+- Monitor employee attendance in real-time
+- Verify shift status before making manual corrections
+- Display employee information in administrative interfaces
+
+## Business Rules
+
+- The NIP must not be null or empty
+- The employee ID must be a valid integer
+- If an employee is not found, an appropriate error message is returned
+- The `jornadaIniciada` flag indicates whether a shift is currently active
+- The `tipoPausa` field is null when no break is active
+- Night shift employees (`esNocturno`) may have different scheduling rules
+- These are read-only endpoints and do not modify attendance data

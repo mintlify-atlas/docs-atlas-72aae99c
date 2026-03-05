@@ -1,0 +1,542 @@
+---
+title: Kiosk Management
+description: Complete API reference for kiosk configuration and management
+---
+
+## List Kiosks
+
+Retrieve all kiosk units in the system.
+
+### Endpoint
+
+```http
+GET /kioscos
+```
+
+<Note>
+This endpoint is **public** and does not require authentication. It's used by kiosk terminals to retrieve configuration.
+</Note>
+
+### Response
+
+<ResponseField name="data" type="array">
+  <Expandable title="Unidad (Kiosk)">
+    <ResponseField name="id" type="integer">
+      Kiosk unit ID
+    </ResponseField>
+    
+    <ResponseField name="clave" type="string">
+      Kiosk identifier code
+    </ResponseField>
+    
+    <ResponseField name="nombreCompleto" type="string">
+      Full kiosk name
+    </ResponseField>
+    
+    <ResponseField name="usaCamara" type="boolean">
+      Whether camera/facial recognition is enabled
+    </ResponseField>
+    
+    <ResponseField name="compensacion" type="string">
+      Time compensation offset (HH:mm:ss format)
+    </ResponseField>
+    
+    <ResponseField name="requiereCodigo" type="boolean">
+      Whether kiosk is requesting a configuration code
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Unidades Kiosco"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/kioscos
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": 3,
+      "clave": "KIOSK-001",
+      "nombreCompleto": "Kiosk Entrada Principal",
+      "usaCamara": true,
+      "compensacion": "00:05:00",
+      "requiereCodigo": false
+    },
+    {
+      "id": 7,
+      "clave": "KIOSK-002",
+      "nombreCompleto": "Kiosk Almacén",
+      "usaCamara": false,
+      "compensacion": "00:00:00",
+      "requiereCodigo": true
+    }
+  ],
+  "message": "Unidades Kiosco",
+  "success": true
+}
+```
+
+---
+
+## Get Kiosk by ID
+
+Retrieve configuration for a specific kiosk.
+
+### Endpoint
+
+```http
+GET /kioscos/{id}
+```
+
+<Note>
+This endpoint is **public** and does not require authentication.
+</Note>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Kiosk unit ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="object">
+  Kiosk unit object with configuration details
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Unidad Kiosco"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/kioscos/3
+```
+
+### Example Response
+
+```json
+{
+  "data": {
+    "id": 3,
+    "clave": "KIOSK-001",
+    "nombreCompleto": "Kiosk Entrada Principal",
+    "usaCamara": true,
+    "compensacion": "00:05:00",
+    "requiereCodigo": false
+  },
+  "message": "Unidad Kiosco",
+  "success": true
+}
+```
+
+---
+
+## Update Camera Usage
+
+Enable or disable camera/facial recognition for a kiosk.
+
+### Endpoint
+
+```http
+PATCH /kioscos/{id}/camara
+```
+
+<Warning>
+This endpoint requires **ADMIN** authorization.
+</Warning>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Kiosk unit ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="estatus" type="boolean" required>
+  True to enable camera, false to disable
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Estatus actualizado correctamente"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH "http://localhost:8081/comialex/api/integra/kioscos/3/camara?estatus=true" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": true,
+  "message": "Estatus actualizado correctamente",
+  "success": true
+}
+```
+
+---
+
+## Generate Configuration Code
+
+Generate a single-use configuration code for remote kiosk setup.
+
+### Endpoint
+
+```http
+PATCH /kioscos/{id}/codigo
+```
+
+<Warning>
+This endpoint requires **ADMIN** authorization.
+</Warning>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Kiosk unit ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="string">
+  The generated configuration code
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Se ha procesado la confirmación"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH http://localhost:8081/comialex/api/integra/kioscos/3/codigo \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": "KX7H9P2M",
+  "message": "Se ha procesado la confirmación",
+  "success": true
+}
+```
+
+<Tip>
+Display this code in the admin interface so it can be entered into the kiosk terminal for configuration.
+</Tip>
+
+---
+
+## Use Configuration Code
+
+Validate and consume a configuration code on the kiosk.
+
+### Endpoint
+
+```http
+POST /kioscos/{id}/codigos/{codigo}/usar
+```
+
+<Note>
+This endpoint is **public** and does not require authentication. It's called by the kiosk terminal during setup.
+</Note>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Kiosk unit ID
+</ParamField>
+
+<ParamField path="codigo" type="string" required>
+  Configuration code to validate
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Código autorizado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X POST http://localhost:8081/comialex/api/integra/kioscos/3/codigos/KX7H9P2M/usar
+```
+
+### Example Response
+
+```json
+{
+  "data": true,
+  "message": "Código autorizado",
+  "success": true
+}
+```
+
+<Note>
+The code is invalidated after first use. If the same code is used again, the request will fail.
+</Note>
+
+---
+
+## Request Configuration Code
+
+Signal that a kiosk needs a configuration code (sets the `requiereCodigo` flag).
+
+### Endpoint
+
+```http
+PATCH /kioscos/{id}/requiere-codigo
+```
+
+<Note>
+This endpoint is **public** and does not require authentication. It's called by the kiosk when it needs configuration.
+</Note>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Kiosk unit ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Solicitud enviada"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH http://localhost:8081/comialex/api/integra/kioscos/3/requiere-codigo
+```
+
+### Example Response
+
+```json
+{
+  "data": true,
+  "message": "Solicitud enviada",
+  "success": true
+}
+```
+
+<Tip>
+This sets a flag that administrators can see in the admin panel, alerting them that a kiosk needs attention.
+</Tip>
+
+---
+
+## Cancel Configuration Request
+
+Cancel a pending configuration code request (clears the `requiereCodigo` flag).
+
+### Endpoint
+
+```http
+DELETE /kioscos/{id}/requiere-codigo
+```
+
+<Warning>
+This endpoint requires **ADMIN** authorization.
+</Warning>
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Kiosk unit ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Solicitud enviada"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X DELETE http://localhost:8081/comialex/api/integra/kioscos/3/requiere-codigo \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+---
+
+## Update Compensation Time
+
+Set the time compensation offset for a kiosk.
+
+### Endpoint
+
+```http
+PATCH /kioscos/{id}/compensacion
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Kiosk unit ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="compensacion" type="string" required>
+  Time offset in LocalTime format (HH:mm:ss)
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Tiempo de compensación actualizado correctamente"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH "http://localhost:8081/comialex/api/integra/kioscos/3/compensacion?compensacion=00:05:00" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+<Tip>
+Compensation time allows for clock-in tolerance. For example, a 5-minute compensation means employees can clock in up to 5 minutes early or late without being marked as tardy.
+</Tip>
+
+---
+
+## Update Capture Wait Time
+
+Set the global capture wait time for all kiosks.
+
+### Endpoint
+
+```http
+PATCH /kioscos/tiempo-captura
+```
+
+### Query Parameters
+
+<ParamField query="tiempoEspera" type="integer" required>
+  Wait time in seconds before capturing attendance photo
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Tiempo de espera actualizado correctamente"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH "http://localhost:8081/comialex/api/integra/kioscos/tiempo-captura?tiempoEspera=3" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+---
+
+## Get Capture Wait Time
+
+Retrieve the current global capture wait time.
+
+### Endpoint
+
+```http
+GET /kioscos/tiempo-captura
+```
+
+### Response
+
+<ResponseField name="data" type="integer">
+  Wait time in seconds
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Tiempo de espera"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/kioscos/tiempo-captura \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": 3,
+  "message": "Tiempo de espera",
+  "success": true
+}
+```
+
+## Kiosk Setup Workflow
+
+<Steps>
+  <Step title="Kiosk requests code">
+    The kiosk terminal calls `PATCH /kioscos/{id}/requiere-codigo` to signal it needs configuration.
+  </Step>
+  
+  <Step title="Admin generates code">
+    Administrator sees the request in the admin panel and calls `PATCH /kioscos/{id}/codigo` to generate a code.
+  </Step>
+  
+  <Step title="Admin provides code">
+    Administrator displays or communicates the code to the person at the kiosk terminal.
+  </Step>
+  
+  <Step title="Kiosk uses code">
+    The person enters the code into the kiosk, which calls `POST /kioscos/{id}/codigos/{codigo}/usar` to validate.
+  </Step>
+  
+  <Step title="Configuration complete">
+    If successful, the kiosk is configured and the `requiereCodigo` flag is cleared.
+  </Step>
+</Steps>
+
+<Warning>
+**Security Note**: Configuration codes are single-use and should be transmitted securely. Never log or store codes in plain text.
+</Warning>

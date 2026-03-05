@@ -1,0 +1,563 @@
+---
+title: Authentication
+description: Learn how to authenticate with the Integra API using JWT tokens, manage token lifecycle, and implement security best practices.
+---
+
+## Overview
+
+Integra uses **JSON Web Tokens (JWT)** with **RSA public/private key encryption** for secure, stateless authentication. This approach ensures that:
+
+- No server-side session storage is required
+- Tokens are cryptographically signed and cannot be forged
+- Authentication scales horizontally across multiple server instances
+- Tokens carry user identity and permissions for efficient authorization
+
+<Info>
+Integra implements JWT authentication using the JJWT library (version 0.13.0) with RSA-256 signature algorithm.
+</Info>
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant Database
+    
+    Client->>API: POST /auth/login (username, password)
+    API->>Database: Verify credentials
+    Database-->>API: User details + roles
+    API->>API: Generate JWT token
+    API-->>Client: JWT token + user info
+    Client->>API: GET /empleados (Bearer token)
+    API->>API: Validate token signature
+    API->>API: Check token expiration
+    API->>API: Verify token version
+    API->>Database: Fetch requested data
+    Database-->>API: Employee data
+    API-->>Client: Response with data
+```
+
+## Obtaining a Token
+
+### Login Endpoint
+
+To authenticate and receive a JWT token, send a POST request to the login endpoint:
+
+```http
+POST /comialex/api/integra/auth/login
+Content-Type: application/json
+
+{
+  "username": "your_username",
+  "password": "your_password"
+}
+```
+
+### Request Schema
+
+Based on `AccesoRequest.java`:
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `username` | string | Yes | 3-50 characters | User's login username |
+| `password` | string | Yes | 1-100 characters | User's password |
+
+<CodeGroup>
+```bash cURL
+curl -X POST http://localhost:8081/comialex/api/integra/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "jperez",
+    "password": "SecurePass123!"
+  }'
+```
+
+```javascript JavaScript (Fetch)
+const response = await fetch('http://localhost:8081/comialex/api/integra/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    username: 'jperez',
+    password: 'SecurePass123!'
+  })
+});
+
+const data = await response.json();
+const token = data.token;
+
+// Store token for subsequent requests
+localStorage.setItem('authToken', token);
+```
+
+```python Python (Requests)
+import requests
+
+url = 'http://localhost:8081/comialex/api/integra/auth/login'
+headers = {'Content-Type': 'application/json'}
+payload = {
+    'username': 'jperez',
+    'password': 'SecurePass123!'
+}
+
+response = requests.post(url, json=payload, headers=headers)
+data = response.json()
+token = data['token']
+
+# Store token for subsequent requests
+auth_token = token
+```
+
+```java Java (Spring RestTemplate)
+RestTemplate restTemplate = new RestTemplate();
+HttpHeaders headers = new HttpHeaders();
+headers.setContentType(MediaType.APPLICATION_JSON);
+
+Map<String, String> request = new HashMap<>();
+request.put("username", "jperez");
+request.put("password", "SecurePass123!");
+
+HttpEntity<Map<String, String>> entity = new HttpEntity<>(request, headers);
+
+ResponseEntity<JWTResponse> response = restTemplate.postForEntity(
+    "http://localhost:8081/comialex/api/integra/auth/login",
+    entity,
+    JWTResponse.class
+);
+
+String token = response.getBody().getToken();
+```
+</CodeGroup>
+
+### Response Schema
+
+Based on `JWTResponse.java`:
+
+```json
+{
+  "token": "eyJhbGciOiJSUzI1NiJ9.eyJpZCI6MTIzLCJzdXAiOnRydWUsImVtcGxlYWRvSWQiOjQ1Niwi...",
+  "employeeName": {
+    "id": 456,
+    "nombre": "Juan",
+    "apellidos": "Pérez García",
+    "nip": "1234",
+    "activo": true,
+    "email": "jperez@company.com",
+    "puesto": "Desarrollador Senior",
+    "departamento": "Tecnología"
+  },
+  "uiPermissions": [
+    "asistencia.ver",
+    "asistencia.registrar",
+    "empleados.ver",
+    "reportes.generar"
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `token` | string | JWT access token for authentication |
+| `employeeName` | object | Employee details associated with the authenticated user |
+| `uiPermissions` | string[] | List of permission identifiers for UI access control |
+
+<Note>
+Store the `token` securely on the client side. The token contains encoded user information and is cryptographically signed to prevent tampering.
+</Note>
+
+## Using the Token
+
+### Authorization Header
+
+Include the JWT token in the `Authorization` header of all authenticated requests using the Bearer scheme:
+
+```http
+GET /comialex/api/integra/empleados
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJpZCI6MTIzLCJzdXAiOnRydWUsImVtcGxlYWRvSWQiOjQ1Niwi...
+```
+
+### Implementation Examples
+
+<CodeGroup>
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/empleados \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+```javascript JavaScript (Fetch)
+const token = localStorage.getItem('authToken');
+
+const response = await fetch('http://localhost:8081/comialex/api/integra/empleados', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+
+const data = await response.json();
+```
+
+```python Python (Requests)
+import requests
+
+token = auth_token  # From login response
+headers = {
+    'Authorization': f'Bearer {token}'
+}
+
+response = requests.get(
+    'http://localhost:8081/comialex/api/integra/empleados',
+    headers=headers
+)
+data = response.json()
+```
+
+```java Java (Spring RestTemplate)
+HttpHeaders headers = new HttpHeaders();
+headers.set("Authorization", "Bearer " + token);
+
+HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+ResponseEntity<ResponseData> response = restTemplate.exchange(
+    "http://localhost:8081/comialex/api/integra/empleados",
+    HttpMethod.GET,
+    entity,
+    ResponseData.class
+);
+```
+</CodeGroup>
+
+## Token Structure
+
+### JWT Claims
+
+Integra's JWT tokens contain the following claims (from `JwtUtil.java`):
+
+| Claim | Type | Description |
+|-------|------|-------------|
+| `sub` | string | Username (subject) |
+| `id` | integer | User account ID |
+| `empleadoId` | integer | Associated employee ID (if applicable) |
+| `sup` | boolean | Whether user is a supervisor |
+| `authorities` | string[] | List of role IDs (e.g., `["ROLE_1", "ROLE_2"]`) |
+| `ver` | integer | Token version for invalidation support |
+| `iat` | timestamp | Issued at time |
+| `exp` | timestamp | Expiration time |
+| `jti` | string | Unique token ID (UUID) |
+| `iss` | string | Issuer (always `"integra-auth-server"`) |
+
+### Token Validation
+
+The server validates tokens using the `JwtRequestFilter` (from `JwtRequestFilter.java`):
+
+1. **Extract Token**: Reads the `Authorization` header and extracts the Bearer token
+2. **Verify Signature**: Validates the RSA signature using the public key
+3. **Check Expiration**: Ensures the token hasn't expired
+4. **Validate Version**: Confirms the token version matches the current user version
+5. **Load Permissions**: Expands role IDs to their associated permissions
+6. **Set Context**: Establishes Spring Security authentication context
+
+```java
+// From JwtRequestFilter.java (lines 34-42)
+final String authHeader = request.getHeader("Authorization");
+
+if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+    filterChain.doFilter(request, response);
+    return;
+}
+
+final String token = authHeader.substring(7);
+```
+
+<Warning>
+Tokens are validated on every request. If a token is invalid, expired, or has a deprecated version, the request will be rejected with a 401 Unauthorized response.
+</Warning>
+
+## Token Expiration
+
+### Default Configuration
+
+From `application.yml`:
+
+```yaml
+security:
+  jwt:
+    expiration: 2592000         # 30 days in seconds
+    refresh-expiration: 2592000 # 30 days in seconds
+```
+
+- **Access Token Expiration**: 30 days (2,592,000 seconds)
+- **Refresh Token Expiration**: 30 days (2,592,000 seconds)
+
+### Handling Expired Tokens
+
+When a token expires, the API returns:
+
+```json
+{
+  "success": false,
+  "message": "Fallo en validación de JWT: Token has expired",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `401 Unauthorized`
+
+<Info>
+When you receive a 401 error due to token expiration, prompt the user to log in again. Integra currently uses long-lived tokens (30 days) to reduce re-authentication frequency.
+</Info>
+
+## Token Versioning & Invalidation
+
+### How It Works
+
+Integra implements a token versioning system (from `JwtUtil.java` lines 81-94) that allows for dynamic token invalidation:
+
+1. Each user has a version number stored in the database
+2. When a token is generated, it includes the current version in the `ver` claim
+3. On validation, the token's version is compared to the current user version
+4. If the token version is less than the current version, it's rejected
+
+```java
+// From JwtUtil.java
+private boolean isVersionDeprecated(Claims claims) {
+    Integer tokenVersion = claims.get(CLAIM_VER, Integer.class);
+    if (tokenVersion == null) return true;
+    
+    int currentVersion = tokenVersionService.getVersion(claims.getSubject());
+    return tokenVersion < currentVersion;
+}
+```
+
+### Use Cases for Version Invalidation
+
+- **Password Changed**: Invalidate all existing tokens when a user changes their password
+- **Security Breach**: Immediately revoke access by incrementing the user's version
+- **Permission Changes**: Force token refresh after role/permission updates
+- **Account Disabled**: Prevent access even with a valid, non-expired token
+
+## Public Endpoints
+
+The following endpoints do NOT require authentication (from `SecurityConfig.java`):
+
+### Authentication Endpoints
+```
+POST /auth/login
+POST /auth/refresh
+POST /auth/forgot-password
+POST /auth/validate-reset-token
+POST /auth/reset-password
+POST /auth/register-request
+POST /auth/validate-registration-token
+POST /auth/register-confirm
+GET  /auth/public/**
+```
+
+### Other Public Endpoints
+```
+GET  /estados/**
+GET  /unidades/**
+GET  /asistencia/**
+GET  /kioscos
+GET  /kioscos/{id}
+POST /kioscos/{id}/codigos/{codigo}/usar
+PATCH /kioscos/{id}/requiere-codigo
+```
+
+### Documentation & Monitoring
+```
+GET /swagger-ui/**
+GET /v3/api-docs/**
+GET /swagger-ui.html
+GET /actuator/health
+GET /actuator/prometheus
+```
+
+<Note>
+All other endpoints require a valid JWT token in the Authorization header.
+</Note>
+
+## Security Best Practices
+
+### Token Storage
+
+<Warning>
+**Never** store JWT tokens in:
+- URL parameters
+- Browser local storage (vulnerable to XSS attacks)
+- Unencrypted cookies
+
+**Recommended**: Use secure, HTTP-only cookies or secure session storage.
+</Warning>
+
+### HTTPS/TLS
+
+<Warning>
+**Always** use HTTPS in production. JWT tokens transmitted over HTTP can be intercepted and used by attackers.
+</Warning>
+
+### Password Security
+
+Integra uses BCrypt for password hashing (from `SecurityConfig.java`):
+
+```java
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+```
+
+- Passwords are never stored in plain text
+- BCrypt automatically salts passwords
+- Computational cost makes brute-force attacks impractical
+
+### Token Transmission
+
+```javascript
+// ✅ CORRECT: Use Authorization header
+fetch('/api/empleados', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+
+// ❌ WRONG: Never put tokens in URL
+fetch(`/api/empleados?token=${token}`);
+```
+
+### Key Management
+
+<Warning>
+**Protect your RSA private key!**
+
+- Never commit `private.pem` to version control
+- Use environment variables or secret management services
+- Rotate keys periodically
+- Use different key pairs for development and production
+</Warning>
+
+### Rate Limiting
+
+Consider implementing rate limiting on authentication endpoints to prevent brute-force attacks:
+
+```
+POST /auth/login - Limit: 5 requests per minute per IP
+```
+
+## Error Responses
+
+### Invalid Credentials
+
+```json
+{
+  "success": false,
+  "message": "Invalid username or password",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `401 Unauthorized`
+
+### Missing Token
+
+```json
+{
+  "success": false,
+  "message": "Authentication required",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `401 Unauthorized`
+
+### Invalid Token Signature
+
+```json
+{
+  "success": false,
+  "message": "Fallo en validación de JWT: JWT signature does not match",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `401 Unauthorized`
+
+### Deprecated Token Version
+
+```json
+{
+  "success": false,
+  "message": "La versión del token ya no es válida.",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `401 Unauthorized`
+
+## Password Recovery Flow
+
+Integra provides a self-service password recovery system:
+
+<Steps>
+  <Step title="Request Password Reset">
+    ```http
+    POST /auth/forgot-password
+    Content-Type: application/json
+    
+    {
+      "email": "user@example.com"
+    }
+    ```
+    
+    The system sends a reset token via email.
+  </Step>
+  
+  <Step title="Validate Reset Token">
+    ```http
+    POST /auth/validate-reset-token
+    Content-Type: application/json
+    
+    {
+      "token": "reset-token-from-email"
+    }
+    ```
+    
+    Verify the token is valid and not expired.
+  </Step>
+  
+  <Step title="Reset Password">
+    ```http
+    POST /auth/reset-password
+    Content-Type: application/json
+    
+    {
+      "token": "reset-token-from-email",
+      "newPassword": "NewSecurePass123!"
+    }
+    ```
+    
+    Set the new password and invalidate all existing tokens.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api/auth/login">
+    Explore all available API endpoints
+  </Card>
+  
+  <Card title="Employee Management" icon="users" href="/api/employees/overview">
+    Learn how to manage employee records
+  </Card>
+  
+  <Card title="Attendance Tracking" icon="clock" href="/api/attendance/start-shift">
+    Understand attendance registration workflows
+  </Card>
+  
+  <Card title="Role-Based Access" icon="shield" href="/api/access/roles">
+    Configure roles and permissions
+  </Card>
+</CardGroup>

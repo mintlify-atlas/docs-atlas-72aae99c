@@ -1,0 +1,184 @@
+---
+title: 'Break Management'
+description: 'Start and end employee breaks during work shifts'
+---
+
+## Overview
+
+These endpoints manage employee breaks during their work shifts. The system supports different types of breaks including meal breaks (COMIDA) and other breaks (OTRA).
+
+---
+
+## Start Break
+
+<api method="POST" endpoint="/asistencia/pausa/iniciar" />
+
+Initiates a break period for an employee during their active work shift.
+
+### Request Body
+
+<ParamField body="empleadoId" type="integer" required>
+  The unique identifier of the employee starting a break
+</ParamField>
+
+<ParamField body="unidadId" type="integer" required>
+  The ID of the unit/location where the break is being started
+</ParamField>
+
+<ParamField body="pausa" type="enum" required>
+  The type of break being started. Allowed values:
+  - `COMIDA` - Meal break
+  - `OTRA` - Other type of break
+</ParamField>
+
+<ParamField body="foto" type="string">
+  Base64-encoded photo of the employee (optional)
+</ParamField>
+
+<ParamField body="unidadAsignadaId" type="integer">
+  The ID of the employee's assigned unit (optional)
+</ParamField>
+
+<ParamField body="hora" type="string">
+  Custom time for break start in HH:mm:ss format (optional). If not provided, current time is used
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="null">
+  No data is returned for this endpoint
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message: "Pausa iniciada"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X POST https://api.integra.com/asistencia/pausa/iniciar \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "empleadoId": 123,
+    "unidadId": 5,
+    "pausa": "COMIDA",
+    "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+    "hora": "13:00:00"
+  }'
+```
+
+### Response Example
+
+```json Success Response
+{
+  "success": true,
+  "data": null,
+  "message": "Pausa iniciada"
+}
+```
+
+---
+
+## End Break
+
+<api method="POST" endpoint="/asistencia/pausa/finalizar" />
+
+Finalizes an active break period for an employee.
+
+### Request Body
+
+<ParamField body="empleadoId" type="integer" required>
+  The unique identifier of the employee ending a break
+</ParamField>
+
+<ParamField body="unidadId" type="integer" required>
+  The ID of the unit/location where the break is being ended
+</ParamField>
+
+<ParamField body="pausa" type="enum" required>
+  The type of break being ended. Must match the type of the active break:
+  - `COMIDA` - Meal break
+  - `OTRA` - Other type of break
+</ParamField>
+
+<ParamField body="foto" type="string">
+  Base64-encoded photo of the employee (optional)
+</ParamField>
+
+<ParamField body="unidadAsignadaId" type="integer">
+  The ID of the employee's assigned unit (optional)
+</ParamField>
+
+<ParamField body="hora" type="string">
+  Custom time for break end in HH:mm:ss format (optional). If not provided, current time is used
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="null">
+  No data is returned for this endpoint
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message: "Pausa registrada"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X POST https://api.integra.com/asistencia/pausa/finalizar \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "empleadoId": 123,
+    "unidadId": 5,
+    "pausa": "COMIDA",
+    "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+    "hora": "14:00:00"
+  }'
+```
+
+### Response Example
+
+```json Success Response
+{
+  "success": true,
+  "data": null,
+  "message": "Pausa registrada"
+}
+```
+
+```json Error Response
+{
+  "success": false,
+  "message": "No hay pausa activa para finalizar"
+}
+```
+
+---
+
+## Break Types
+
+### COMIDA (Meal Break)
+Used for scheduled meal breaks during the work shift. Typically longer in duration and may have specific scheduling rules.
+
+### OTRA (Other Break)
+Used for any other type of break (bathroom, rest, etc.). Generally shorter in duration.
+
+## Business Rules
+
+- An employee must have an active shift to start a break
+- Only one break can be active at a time per employee
+- The break type when ending must match the break type that was started
+- Break end time must be after break start time
+- The `empleadoId`, `unidadId`, and `pausa` fields are mandatory
+- Break duration may be subject to company policies and labor regulations

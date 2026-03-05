@@ -1,0 +1,263 @@
+---
+title: 'Employees API Overview'
+description: 'Manage employee data and retrieve employee information'
+---
+
+## Introduction
+
+The Employees API provides endpoints to manage and retrieve employee information within the Integra system. This API allows you to query employee records, access supervisor lists, and retrieve detailed employee information including organizational relationships and contact details.
+
+All endpoints in this API require authentication via Bearer token.
+
+## Base URL
+
+All employee endpoints are prefixed with:
+
+```
+/empleados
+```
+
+## Employee Model
+
+The `Empleado` model represents an employee in the system with the following structure:
+
+<ResponseField name="id" type="integer" required>
+  Unique identifier for the employee
+</ResponseField>
+
+<ResponseField name="codigo" type="string" required>
+  Employee code (unique identifier, max 20 characters)
+</ResponseField>
+
+<ResponseField name="nombre" type="string" required>
+  Employee's first name (max 50 characters)
+</ResponseField>
+
+<ResponseField name="apellidoPaterno" type="string" required>
+  Employee's paternal surname (max 50 characters)
+</ResponseField>
+
+<ResponseField name="apellidoMaterno" type="string">
+  Employee's maternal surname (max 50 characters)
+</ResponseField>
+
+<ResponseField name="nombreCompleto" type="string">
+  Full name (automatically generated, max 152 characters)
+</ResponseField>
+
+<ResponseField name="puesto" type="object">
+  Employee's position information
+  
+  <Expandable title="Puesto properties">
+    <ResponseField name="id" type="integer">
+      Position ID
+    </ResponseField>
+    <ResponseField name="nombre" type="string">
+      Position name
+    </ResponseField>
+    <ResponseField name="activo" type="boolean">
+      Whether the position is active
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="departamento" type="object">
+  Employee's department information
+  
+  <Expandable title="Departamento properties">
+    <ResponseField name="id" type="integer">
+      Department ID
+    </ResponseField>
+    <ResponseField name="nombre" type="string">
+      Department name
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="unidad" type="object">
+  Business unit information
+  
+  <Expandable title="Unidad properties">
+    <ResponseField name="id" type="integer">
+      Unit ID
+    </ResponseField>
+    <ResponseField name="clave" type="string">
+      Unit code
+    </ResponseField>
+    <ResponseField name="nombre" type="string">
+      Unit name
+    </ResponseField>
+    <ResponseField name="nombreCompleto" type="string">
+      Full unit name
+    </ResponseField>
+    <ResponseField name="activo" type="boolean">
+      Whether the unit is active
+    </ResponseField>
+    <ResponseField name="operativa" type="boolean">
+      Whether the unit is operational
+    </ResponseField>
+    <ResponseField name="supervisor" type="object">
+      Unit supervisor information (references Empleado)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="contacto" type="object">
+  Employee contact information
+  
+  <Expandable title="Contacto properties">
+    <ResponseField name="telefono" type="string">
+      Phone number (max 15 characters)
+    </ResponseField>
+    <ResponseField name="email" type="string">
+      Email address (max 100 characters)
+    </ResponseField>
+    <ResponseField name="direccion" type="string">
+      Physical address
+    </ResponseField>
+    <ResponseField name="localizacion" type="string">
+      Location details
+    </ResponseField>
+    <ResponseField name="estado" type="object">
+      State/province information
+    </ResponseField>
+    <ResponseField name="zona" type="object">
+      Zone/region information
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="fechaAlta" type="string">
+  Hire date (ISO 8601 format: YYYY-MM-DD)
+</ResponseField>
+
+<ResponseField name="fechaBaja" type="string">
+  Termination date (ISO 8601 format: YYYY-MM-DD)
+</ResponseField>
+
+<ResponseField name="fechaReingreso" type="string">
+  Rehire date if applicable (ISO 8601 format: YYYY-MM-DD)
+</ResponseField>
+
+<ResponseField name="estatus" type="string">
+  Employee status (default: "A" for Active)
+</ResponseField>
+
+<ResponseField name="sexo" type="string">
+  Gender
+</ResponseField>
+
+<ResponseField name="gestores" type="array">
+  List of managers/supervisors for this employee
+  
+  <Expandable title="Gestor properties">
+    <ResponseField name="id" type="integer">
+      Manager ID
+    </ResponseField>
+    <ResponseField name="nombreCompleto" type="string">
+      Manager's full name
+    </ResponseField>
+    <ResponseField name="nivel" type="integer">
+      Authorization level
+    </ResponseField>
+    <ResponseField name="proceso" type="string">
+      Process type
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Response Wrapper
+
+All successful API responses are wrapped in a standard `ResponseData` object:
+
+```json
+{
+  "success": true,
+  "data": {
+    // Response payload here (single object or array)
+  },
+  "message": "Descripción de la operación",
+  "meta": {
+    // Optional metadata (pagination info, etc.)
+  }
+}
+```
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the request was successful
+</ResponseField>
+
+<ResponseField name="data" type="object | array">
+  The actual response data (employee object or array of employees)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Descriptive message about the operation
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Optional metadata (e.g., pagination information)
+</ResponseField>
+
+## Common Use Cases
+
+### 1. List All Employees
+Retrieve a list of all employees in the system, with optional filtering by department, position, unit, supervisor, or status.
+
+### 2. Get Employee Details
+Fetch comprehensive information about a specific employee, including their organizational relationships, contact information, and assigned managers.
+
+### 3. Get Supervisors
+Retrieve a list of employees who have supervisor roles, optionally filtered by active status.
+
+### 4. Filter Employees
+Query employees using various filter criteria:
+- By supervisor ID
+- By position ID
+- By department
+- By business unit
+- By zone
+- By employee code
+- By status (active/inactive)
+
+## Authentication
+
+All endpoints require authentication using a Bearer token in the Authorization header:
+
+```
+Authorization: Bearer {your_token_here}
+```
+
+<Warning>
+  Requests without valid authentication will receive a 401 Unauthorized response.
+</Warning>
+
+## Error Handling
+
+Error responses follow this structure:
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "data": null
+}
+```
+
+Common HTTP status codes:
+- `200 OK` - Request successful
+- `400 Bad Request` - Invalid request parameters
+- `401 Unauthorized` - Missing or invalid authentication
+- `404 Not Found` - Employee not found
+- `500 Internal Server Error` - Server error
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Employee Management" icon="users" href="/api/employees/management">
+    Learn about all CRUD operations and filtering options
+  </Card>
+  <Card title="Authentication" icon="key" href="/api/auth/login">
+    Set up authentication for API access
+  </Card>
+</CardGroup>

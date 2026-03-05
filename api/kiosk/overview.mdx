@@ -1,0 +1,122 @@
+---
+title: Kiosk Overview
+description: Understand the kiosk system for employee clock-in/clock-out
+---
+
+## Overview
+
+The Kiosk API manages self-service attendance terminals that allow employees to clock in and out. Kiosks are physical or virtual stations where employees can register their attendance using various methods like NIP codes, facial recognition, or QR codes.
+
+## Core Concepts
+
+### Kiosk Unit
+
+A kiosk is represented as a special type of organizational unit (Unidad) with kiosk-specific configuration:
+
+- **Camera Usage**: Whether facial recognition is enabled
+- **Configuration Code**: Temporary code for remote kiosk setup
+- **Compensation Time**: Time offset for early/late clock-ins
+- **Capture Wait Time**: Delay before capturing attendance image
+
+### Clock-in Flow
+
+1. **Employee identifies themselves** at the kiosk (NIP, QR code, facial recognition)
+2. **System validates** the employee and their schedule
+3. **Camera captures** employee photo (if enabled)
+4. **Attendance record** is created with timestamp and location
+5. **Confirmation** is displayed to the employee
+
+### Configuration Security
+
+Kiosks use single-use configuration codes for secure remote setup:
+
+- Admin generates a configuration code
+- Code is displayed in the admin panel
+- Kiosk uses the code to retrieve its configuration
+- Code is invalidated after first use
+
+## Base URL
+
+All kiosk endpoints are prefixed with:
+
+```
+/comialex/api/integra/kioscos
+```
+
+## Authentication
+
+Most kiosk endpoints require JWT authentication for administrative operations. However, some endpoints used by the kiosk itself are public:
+
+### Public Endpoints (No Auth Required)
+
+- `GET /kioscos` - List all kiosks
+- `GET /kioscos/{id}` - Get kiosk configuration
+- `POST /kioscos/{id}/codigos/{codigo}/usar` - Use configuration code
+- `PATCH /kioscos/{id}/requiere-codigo` - Request configuration code
+
+### Protected Endpoints (Auth Required)
+
+- Camera configuration
+- Code generation
+- Compensation settings
+- All administrative operations
+
+## Public vs Admin Access
+
+<Warning>
+**Security Note**: Public endpoints are designed for kiosk terminals to access their own configuration. The kiosk ID acts as a form of access control. Do not expose sensitive data through these endpoints.
+</Warning>
+
+### Public Access
+
+Kiosk terminals need to:
+- Retrieve their configuration (camera settings, compensation time)
+- Request configuration codes when needed
+- Use codes to validate setup
+
+### Admin Access
+
+Administrators need to:
+- Configure camera usage
+- Generate configuration codes
+- Update compensation times
+- Manage capture wait times
+
+## Common Response Format
+
+All endpoints return responses in the standard `ResponseData` wrapper format:
+
+```json
+{
+  "data": <response_data>,
+  "message": "Success message",
+  "success": true,
+  "timestamp": 1709644800000
+}
+```
+
+## Kiosk Configuration Example
+
+```json
+{
+  "id": 3,
+  "clave": "KIOSK-001",
+  "nombreCompleto": "Kiosk Entrada Principal",
+  "usaCamara": true,
+  "compensacion": "00:05:00",
+  "requiereCodigo": false,
+  "tiempoEspera": 3
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Kiosk Configuration" icon="gear" href="/api/kiosk/clock-in">
+    Manage kiosk settings and behavior
+  </Card>
+  
+  <Card title="Attendance System" icon="clock" href="/concepts/attendance-system">
+    Learn about the attendance tracking system
+  </Card>
+</CardGroup>

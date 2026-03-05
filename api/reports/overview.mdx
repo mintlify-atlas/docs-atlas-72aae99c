@@ -1,0 +1,174 @@
+---
+title: Reports Overview
+description: Generate and export attendance reports and analytics
+---
+
+## Overview
+
+The Reports API provides comprehensive attendance reporting capabilities, including detailed attendance records, inconsistencies, monthly summaries, and Excel exports. Reports can be filtered by employee, unit, zone, position, and supervisor.
+
+## Report Types
+
+### Attendance Reports
+
+Detailed attendance records showing clock-in/clock-out times, breaks, and total hours worked. Available in:
+
+- **JSON format**: For programmatic access and web display
+- **Excel format**: For detailed analysis with nested break information
+
+### Inconsistency Reports
+
+Identify attendance issues such as:
+- Missing clock-out times
+- Overlapping shifts
+- Excessive break times
+- Schedule violations
+
+### Monthly Summaries
+
+Aggregate attendance data for a specific month:
+- Total days worked
+- Days absent
+- Average hours per day
+- Tardiness count
+
+### Absence Reports
+
+Identify employees without attendance records in a given date range, grouped by date.
+
+## Base URL
+
+All report endpoints are prefixed with:
+
+```
+/comialex/api/integra/asistencia/reporte
+```
+
+## Authentication
+
+All report endpoints require JWT authentication. Include the Bearer token in the Authorization header:
+
+```http
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+See [Authentication](/authentication) for details on obtaining and using tokens.
+
+## Common Filtering Parameters
+
+Most report endpoints support the following filters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `empleadoId` | integer | Filter by specific employee |
+| `unidadId` | integer | Filter by organizational unit |
+| `zonaId` | integer | Filter by geographic zone |
+| `puestoId` | integer | Filter by job position |
+| `supervisorId` | integer | Filter by supervisor |
+| `desde` | datetime | Start date/time (ISO 8601) |
+| `hasta` | datetime | End date/time (ISO 8601) |
+
+### Date Range Examples
+
+```
+# Single day
+desde=2026-03-01T00:00:00
+hasta=2026-03-01T23:59:59
+
+# Week
+desde=2026-03-01T00:00:00
+hasta=2026-03-07T23:59:59
+
+# Month
+desde=2026-03-01T00:00:00
+hasta=2026-03-31T23:59:59
+```
+
+## Response Format
+
+JSON report endpoints return data in the standard `ResponseData` wrapper:
+
+```json
+{
+  "data": <report_data>,
+  "message": "Success message",
+  "success": true,
+  "timestamp": 1709644800000
+}
+```
+
+Excel endpoints return binary file data with appropriate headers for download.
+
+## Performance Considerations
+
+<Warning>
+**Large Reports**: Reports covering long date ranges or many employees can be computationally expensive. Consider:
+
+- Limiting date ranges to necessary periods
+- Using pagination where available
+- Generating reports during off-peak hours
+- Implementing client-side caching
+</Warning>
+
+### Recommended Limits
+
+- **Date Range**: Maximum 90 days for detailed reports
+- **Employee Count**: Filter by unit/zone when possible
+- **Excel Exports**: Use for analysis, not real-time display
+
+## Report Data Structure
+
+### EmpleadoReporte (Employee Report)
+
+```json
+{
+  "empleadoId": 456,
+  "nombreCompleto": "Juan Pérez García",
+  "nip": "1234",
+  "puesto": "Desarrollador Senior",
+  "asistencias": [
+    {
+      "fecha": "2026-03-05",
+      "entrada": "08:00:00",
+      "salida": "17:00:00",
+      "horasTrabajadas": "09:00:00",
+      "pausas": [
+        {
+          "inicio": "12:00:00",
+          "fin": "13:00:00",
+          "duracion": "01:00:00"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Inconsistency (Incidencia)
+
+```json
+{
+  "id": 789,
+  "empleadoId": 456,
+  "fecha": "2026-03-05",
+  "tipo": "FALTA_SALIDA",
+  "descripcion": "Registro de entrada sin salida",
+  "estado": "PENDIENTE"
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Attendance Reports" icon="table" href="/api/reports/attendance">
+    Generate detailed attendance reports
+  </Card>
+  
+  <Card title="Excel Export" icon="file-excel" href="/api/reports/excel-export">
+    Export reports to Excel format
+  </Card>
+  
+  <Card title="Attendance System" icon="clock" href="/concepts/attendance-system">
+    Learn about attendance tracking
+  </Card>
+</CardGroup>

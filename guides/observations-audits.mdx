@@ -1,0 +1,396 @@
+---
+title: 'Observations & Audits'
+description: 'Create, track, and manage audit observations with status updates and reporting'
+---
+
+## Overview
+
+The Observations API enables you to create, track, and manage observations generated during audits and inspections. This system helps monitor compliance issues, safety concerns, quality problems, and other findings that require follow-up and resolution.
+
+## Understanding Observations
+
+Observations in the Integra system represent:
+- Audit findings and compliance issues
+- Safety observations and concerns
+- Quality control findings
+- Process improvement opportunities
+- Corrective action items
+
+Each observation includes:
+- Unique identifier and folio number
+- Priority level and status
+- Associated unit, area, and departments
+- Creation and assignment details
+- Tracking information for resolution
+
+## Querying Observations
+
+Retrieve observations using comprehensive filters to focus on specific criteria.
+
+<Steps>
+  <Step title="Configure filter parameters">
+    **Endpoint:** `GET /observaciones/filtro`
+
+    **Available Query Parameters:**
+    - `supervisorId` - Filter by supervisor ID
+    - `unidadId` - Filter by unit/location ID
+    - `areaId` - Filter by area ID
+    - `departamentoResponsableId` - Filter by responsible department
+    - `departamentoColaboradorId` - Filter by collaborating department
+    - `departamentoGeneraId` - Filter by department that generated the observation
+    - `zonaId` - Filter by zone ID
+    - `prioridad` - Filter by priority level (e.g., "ALTA", "MEDIA", "BAJA")
+    - `tipoObservacionId` - Filter by observation type ID
+    - `estatusId` - Filter by status ID
+    - `folio` - Search by specific folio number
+    - `usuarioCreadorId` - Filter by creator user ID
+    - `creadoDesde` - Filter by creation date from (LocalDateTime format)
+    - `creadoHasta` - Filter by creation date to (LocalDateTime format)
+    - `pagina` - Page number for pagination
+    - `filas` - Number of rows per page
+    - `privado` - Filter by private/public status (boolean)
+
+    All parameters are optional and can be combined for precise filtering.
+  </Step>
+
+  <Step title="Execute observation query">
+    **Example: Get all observations for a specific unit**
+    ```bash
+    curl -X GET "https://api.example.com/observaciones/filtro?unidadId=5" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get high priority observations**
+    ```bash
+    curl -X GET "https://api.example.com/observaciones/filtro?prioridad=ALTA" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get observations by status and department**
+    ```bash
+    curl -X GET "https://api.example.com/observaciones/filtro?estatusId=1&departamentoResponsableId=10" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get observations in date range**
+    ```bash
+    curl -X GET "https://api.example.com/observaciones/filtro?creadoDesde=2026-03-01T00:00:00&creadoHasta=2026-03-31T23:59:59" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Search by folio number**
+    ```bash
+    curl -X GET "https://api.example.com/observaciones/filtro?folio=OBS-2026-001" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Process observation data">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": [
+        {
+          "id": 456,
+          "folio": "OBS-2026-001",
+          "descripcion": "Se observó equipo de protección personal incompleto",
+          "prioridad": "ALTA",
+          "estatus": {
+            "id": 1,
+            "nombre": "Abierta"
+          },
+          "tipoObservacion": {
+            "id": 3,
+            "nombre": "Seguridad"
+          },
+          "unidad": {
+            "id": 5,
+            "nombre": "Unidad Centro"
+          },
+          "area": {
+            "id": 8,
+            "nombre": "Producción"
+          },
+          "departamentoResponsable": {
+            "id": 10,
+            "nombre": "Operaciones"
+          },
+          "departamentoColaborador": {
+            "id": 12,
+            "nombre": "Seguridad"
+          },
+          "departamentoGenera": {
+            "id": 15,
+            "nombre": "Calidad"
+          },
+          "zona": {
+            "id": 2,
+            "nombre": "Zona Centro"
+          },
+          "supervisor": {
+            "id": 45,
+            "nombre": "María Rodríguez"
+          },
+          "usuarioCreador": {
+            "id": 78,
+            "nombre": "Carlos Hernández"
+          },
+          "fechaCreacion": "2026-03-05T10:30:00",
+          "fechaCompromiso": "2026-03-12T17:00:00",
+          "fechaCierre": null,
+          "privado": false,
+          "observaciones": "Requiere acción inmediata",
+          "evidenciaFotografica": [
+            "obs-456-foto1.jpg",
+            "obs-456-foto2.jpg"
+          ]
+        }
+      ],
+      "message": "Observaciones encontradas",
+      "success": true
+    }
+    ```
+
+    **Key Fields:**
+    - `folio` - Unique observation identifier
+    - `prioridad` - Priority level (ALTA, MEDIA, BAJA)
+    - `estatus` - Current status of the observation
+    - `tipoObservacion` - Category/type of observation
+    - `departamentoResponsable` - Department responsible for resolution
+    - `departamentoColaborador` - Collaborating department
+    - `departamentoGenera` - Department that created the observation
+    - `fechaCompromiso` - Target resolution date
+    - `fechaCierre` - Actual closure date
+    - `privado` - Whether observation is private or public
+  </Step>
+</Steps>
+
+## Querying Unit Observations
+
+Retrieve public observations specific to a unit (excludes private observations).
+
+<Steps>
+  <Step title="Query unit observations">
+    **Endpoint:** `GET /observaciones/unidad/filtro`
+
+    Uses the same filter parameters as the general observation query, but automatically filters out private observations (`privado=false`).
+
+    **Example: Get all public observations for a unit**
+    ```bash
+    curl -X GET "https://api.example.com/observaciones/unidad/filtro?unidadId=5" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Get public observations by status**
+    ```bash
+    curl -X GET "https://api.example.com/observaciones/unidad/filtro?unidadId=5&estatusId=1" \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Review public observations">
+    Response format is identical to the general observation query, but results only include public observations (privado=false).
+  </Step>
+</Steps>
+
+## Updating Observation Status
+
+Change the status of an observation to track its progress through resolution.
+
+<Steps>
+  <Step title="Prepare status update">
+    **Endpoint:** `PUT /observaciones/actualizarEstatus/{id}/{estatusId}`
+
+    **Path Parameters:**
+    - `id` - Observation ID (required)
+    - `estatusId` - New status ID (required)
+
+    **Common Status IDs:**
+    - `1` - Abierta (Open)
+    - `2` - En Proceso (In Progress)
+    - `3` - Pendiente Validación (Pending Validation)
+    - `4` - Cerrada (Closed)
+    - `5` - Cancelada (Cancelled)
+
+    <Note>
+    Status ID values may vary by system configuration. Consult your status catalog for accurate IDs.
+    </Note>
+  </Step>
+
+  <Step title="Execute status update">
+    **Example: Mark observation as in progress**
+    ```bash
+    curl -X PUT https://api.example.com/observaciones/actualizarEstatus/456/2 \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Close observation**
+    ```bash
+    curl -X PUT https://api.example.com/observaciones/actualizarEstatus/456/4 \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+
+    **Example: Cancel observation**
+    ```bash
+    curl -X PUT https://api.example.com/observaciones/actualizarEstatus/456/5 \
+      -H "Authorization: Bearer YOUR_TOKEN"
+    ```
+  </Step>
+
+  <Step title="Confirm status change">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": null,
+      "message": "Estatus actualizado",
+      "success": true
+    }
+    ```
+
+    The observation status has been successfully updated. If closing an observation (status 4), the `fechaCierre` field will be automatically set to the current timestamp.
+  </Step>
+</Steps>
+
+## Pagination and Large Result Sets
+
+When working with large numbers of observations, use pagination parameters.
+
+**Example: Get first page (20 records)**
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?unidadId=5&pagina=1&filas=20" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example: Get second page**
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?unidadId=5&pagina=2&filas=20" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Common Filtering Scenarios
+
+### Open High Priority Observations
+
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?prioridad=ALTA&estatusId=1" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Observations by Responsible Department
+
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?departamentoResponsableId=10" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Observations Created This Month
+
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?creadoDesde=2026-03-01T00:00:00&creadoHasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Observations by Supervisor and Zone
+
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?supervisorId=45&zonaId=2" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Safety Observations in Production Area
+
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?tipoObservacionId=3&areaId=8" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Observation Lifecycle
+
+### Typical Status Progression
+
+1. **Abierta (Open)** - Observation created during audit
+2. **En Proceso (In Progress)** - Corrective action initiated
+3. **Pendiente Validación (Pending Validation)** - Action completed, awaiting verification
+4. **Cerrada (Closed)** - Verified and resolved
+
+Alternative path:
+- **Cancelada (Cancelled)** - Observation deemed invalid or duplicate
+
+### Tracking Resolution Time
+
+Calculate resolution time by comparing:
+- `fechaCreacion` - When observation was created
+- `fechaCompromiso` - Target resolution date
+- `fechaCierre` - Actual closure date
+
+## Reporting and Analytics
+
+### Generate Observation Reports
+
+Combine filters to create targeted reports:
+
+**Monthly Safety Report**
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?tipoObservacionId=3&creadoDesde=2026-03-01T00:00:00&creadoHasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Department Performance**
+```bash
+curl -X GET "https://api.example.com/observaciones/filtro?departamentoResponsableId=10&estatusId=4&creadoDesde=2026-03-01T00:00:00&creadoHasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Overdue Observations**
+
+Query observations where current date is past `fechaCompromiso` and status is not closed.
+
+## Best Practices
+
+### Creating Observations
+
+- Assign appropriate priority levels based on severity
+- Set realistic commitment dates (`fechaCompromiso`)
+- Clearly identify responsible department
+- Include photographic evidence when applicable
+- Use descriptive folio numbers for easy reference
+
+### Managing Observations
+
+- Update status regularly as progress is made
+- Track observations by supervisor and zone
+- Review open observations weekly
+- Close observations promptly after verification
+- Use private flag for sensitive findings
+
+### Reporting
+
+- Filter by date ranges for periodic reports
+- Group by department for accountability tracking
+- Monitor high priority items separately
+- Track resolution times against commitments
+- Analyze trends by observation type
+
+## Reference
+
+**Controller:** `ObservacionController.java` at `/observacion/controller/ObservacionController.java:1`
+
+**Related Models:**
+- `ObservacionFilter.java` - Observation filter parameters
+- `ResumenObservacion` - Observation summary response
+
+**Key Endpoints:**
+- `GET /observaciones/filtro` - Query observations with filters
+- `GET /observaciones/unidad/filtro` - Query public unit observations
+- `PUT /observaciones/actualizarEstatus/{id}/{estatusId}` - Update observation status
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Reports Generation" icon="chart-line" href="/guides/reports-generation">
+    Generate comprehensive observation reports
+  </Card>
+  <Card title="Employee Management" icon="users" href="/guides/employee-management">
+    Manage employees and supervisors
+  </Card>
+</CardGroup>

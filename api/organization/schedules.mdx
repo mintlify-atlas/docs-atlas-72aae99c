@@ -1,0 +1,468 @@
+---
+title: 'Operating Schedules API'
+description: 'Manage unit operating hours and schedules'
+---
+
+# Operating Schedules API
+
+The Operating Schedules API (Horarios Operativos) allows you to manage the operating hours for organizational units. Each unit can have multiple operating schedules that define when the unit is operational throughout the week.
+
+## Endpoints
+
+### Get All Operating Days
+
+Retrieves a list of all operating day types (operatividades) used for scheduling.
+
+<CodeGroup>
+```bash cURL
+curl -X GET "https://api.integra.com/operatividades" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/operatividades', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/operatividades"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `GET`
+
+**Endpoint:** `/operatividades`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Lunes"
+    },
+    {
+      "id": 2,
+      "nombre": "Martes"
+    },
+    {
+      "id": 3,
+      "nombre": "Miércoles"
+    },
+    {
+      "id": 4,
+      "nombre": "Jueves"
+    },
+    {
+      "id": 5,
+      "nombre": "Viernes"
+    },
+    {
+      "id": 6,
+      "nombre": "Sábado"
+    },
+    {
+      "id": 7,
+      "nombre": "Domingo"
+    }
+  ],
+  "message": "Lista de operatividades"
+}
+```
+
+### Save Unit Schedules
+
+Saves or updates the operating schedules for a specific unit. This endpoint replaces all existing schedules for the unit with the new schedule configuration.
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.integra.com/operatividades/horarios" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "idUnidad": 45,
+    "horarios": [
+      {
+        "idOperatividad": 1,
+        "apertura": "08:00:00",
+        "cierre": "18:00:00",
+        "activo": true
+      },
+      {
+        "idOperatividad": 2,
+        "apertura": "08:00:00",
+        "cierre": "18:00:00",
+        "activo": true
+      },
+      {
+        "idOperatividad": 3,
+        "apertura": "08:00:00",
+        "cierre": "18:00:00",
+        "activo": true
+      },
+      {
+        "idOperatividad": 4,
+        "apertura": "08:00:00",
+        "cierre": "18:00:00",
+        "activo": true
+      },
+      {
+        "idOperatividad": 5,
+        "apertura": "08:00:00",
+        "cierre": "18:00:00",
+        "activo": true
+      },
+      {
+        "idOperatividad": 6,
+        "apertura": "09:00:00",
+        "cierre": "14:00:00",
+        "activo": true
+      },
+      {
+        "idOperatividad": 7,
+        "apertura": "00:00:00",
+        "cierre": "00:00:00",
+        "activo": false
+      }
+    ]
+  }'
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/operatividades/horarios', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    idUnidad: 45,
+    horarios: [
+      {
+        idOperatividad: 1,
+        apertura: '08:00:00',
+        cierre: '18:00:00',
+        activo: true
+      },
+      {
+        idOperatividad: 2,
+        apertura: '08:00:00',
+        cierre: '18:00:00',
+        activo: true
+      },
+      {
+        idOperatividad: 3,
+        apertura: '08:00:00',
+        cierre: '18:00:00',
+        activo: true
+      },
+      {
+        idOperatividad: 4,
+        apertura: '08:00:00',
+        cierre: '18:00:00',
+        activo: true
+      },
+      {
+        idOperatividad: 5,
+        apertura: '08:00:00',
+        cierre: '18:00:00',
+        activo: true
+      },
+      {
+        idOperatividad: 6,
+        apertura: '09:00:00',
+        cierre: '14:00:00',
+        activo: true
+      },
+      {
+        idOperatividad: 7,
+        apertura: '00:00:00',
+        cierre: '00:00:00',
+        activo: false
+      }
+    ]
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/operatividades/horarios"
+headers = {
+  "Authorization": "Bearer YOUR_TOKEN",
+  "Content-Type": "application/json"
+}
+payload = {
+  "idUnidad": 45,
+  "horarios": [
+    {
+      "idOperatividad": 1,
+      "apertura": "08:00:00",
+      "cierre": "18:00:00",
+      "activo": True
+    },
+    {
+      "idOperatividad": 2,
+      "apertura": "08:00:00",
+      "cierre": "18:00:00",
+      "activo": True
+    },
+    {
+      "idOperatividad": 3,
+      "apertura": "08:00:00",
+      "cierre": "18:00:00",
+      "activo": True
+    },
+    {
+      "idOperatividad": 4,
+      "apertura": "08:00:00",
+      "cierre": "18:00:00",
+      "activo": True
+    },
+    {
+      "idOperatividad": 5,
+      "apertura": "08:00:00",
+      "cierre": "18:00:00",
+      "activo": True
+    },
+    {
+      "idOperatividad": 6,
+      "apertura": "09:00:00",
+      "cierre": "14:00:00",
+      "activo": True
+    },
+    {
+      "idOperatividad": 7,
+      "apertura": "00:00:00",
+      "cierre": "00:00:00",
+      "activo": False
+    }
+  ]
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `POST`
+
+**Endpoint:** `/operatividades/horarios`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+- `Content-Type`: application/json (required)
+
+**Body Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `idUnidad` | Integer | Yes | ID of the unit to configure schedules for |
+| `horarios` | Array | Yes | Array of schedule objects (must not be empty) |
+
+**Schedule Object Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `idOperatividad` | Integer | Yes | Operating day ID (1-7 for Monday-Sunday) |
+| `apertura` | String (Time) | Yes | Opening time in HH:mm:ss format |
+| `cierre` | String (Time) | Yes | Closing time in HH:mm:ss format |
+| `activo` | Boolean | Yes | Whether this schedule is active |
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": null,
+  "message": "Horarios guardados correctamente"
+}
+```
+
+## Entity Structure
+
+### Operatividad Entity
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | Integer | Unique identifier for the operating day |
+| `nombre` | String | Name of the operating day (e.g., "Lunes", "Martes") |
+
+### Schedule Configuration Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `idUnidad` | Integer | Reference to the unit |
+| `horarios` | Array | Collection of schedule entries |
+
+### Schedule Entry
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `idOperatividad` | Integer | Day of the week (1=Monday, 7=Sunday) |
+| `apertura` | Time | Opening time |
+| `cierre` | Time | Closing time |
+| `activo` | Boolean | Whether the schedule is active for this day |
+
+## Time Format
+
+All time values must be provided in 24-hour format as strings:
+- Format: `HH:mm:ss`
+- Examples: `"08:00:00"`, `"18:30:00"`, `"23:59:59"`
+
+## Relationships
+
+Operating schedules relate to:
+- **Units**: Each schedule configuration belongs to a specific unit
+- **Operating Days**: Each schedule entry references a day of the week
+- **Attendance System**: Operating hours may be used to validate employee check-in/out times
+- **Kiosk Mode**: Operating hours can control when kiosk access is available
+
+## Use Cases
+
+### Standard Business Hours
+
+Configure Monday-Friday 8am-6pm, Saturday 9am-2pm, Sunday closed:
+
+```json
+{
+  "idUnidad": 45,
+  "horarios": [
+    {"idOperatividad": 1, "apertura": "08:00:00", "cierre": "18:00:00", "activo": true},
+    {"idOperatividad": 2, "apertura": "08:00:00", "cierre": "18:00:00", "activo": true},
+    {"idOperatividad": 3, "apertura": "08:00:00", "cierre": "18:00:00", "activo": true},
+    {"idOperatividad": 4, "apertura": "08:00:00", "cierre": "18:00:00", "activo": true},
+    {"idOperatividad": 5, "apertura": "08:00:00", "cierre": "18:00:00", "activo": true},
+    {"idOperatividad": 6, "apertura": "09:00:00", "cierre": "14:00:00", "activo": true},
+    {"idOperatividad": 7, "apertura": "00:00:00", "cierre": "00:00:00", "activo": false}
+  ]
+}
+```
+
+### 24/7 Operation
+
+Configure continuous operation:
+
+```json
+{
+  "idUnidad": 45,
+  "horarios": [
+    {"idOperatividad": 1, "apertura": "00:00:00", "cierre": "23:59:59", "activo": true},
+    {"idOperatividad": 2, "apertura": "00:00:00", "cierre": "23:59:59", "activo": true},
+    {"idOperatividad": 3, "apertura": "00:00:00", "cierre": "23:59:59", "activo": true},
+    {"idOperatividad": 4, "apertura": "00:00:00", "cierre": "23:59:59", "activo": true},
+    {"idOperatividad": 5, "apertura": "00:00:00", "cierre": "23:59:59", "activo": true},
+    {"idOperatividad": 6, "apertura": "00:00:00", "cierre": "23:59:59", "activo": true},
+    {"idOperatividad": 7, "apertura": "00:00:00", "cierre": "23:59:59", "activo": true}
+  ]
+}
+```
+
+### Split Shifts
+
+For units with lunch breaks or split shifts, you may need to handle this at the application level or create multiple schedule entries per day (if supported by your implementation).
+
+## Validation Rules
+
+### Save Schedules Request
+
+- `idUnidad`: Required, must reference an existing unit
+- `horarios`: Required, must not be empty array
+- Each schedule entry must have all required fields
+- `idOperatividad`: Must be between 1-7 (representing days of the week)
+- `apertura` and `cierre`: Must be valid time strings in HH:mm:ss format
+- `activo`: Must be a boolean value
+
+## Error Responses
+
+### Validation Error
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "horarios",
+      "message": "La lista de horarios no puede estar vacía"
+    },
+    {
+      "field": "horarios[0].apertura",
+      "message": "La hora de apertura es requerida"
+    }
+  ]
+}
+```
+
+### Invalid Time Format
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "error": "Invalid time format",
+  "message": "Time must be in HH:mm:ss format"
+}
+```
+
+### Unit Not Found
+
+**Status Code:** `404 Not Found`
+
+```json
+{
+  "error": "Unit not found",
+  "message": "No unit found with the specified ID"
+}
+```
+
+## Best Practices
+
+1. **Complete Week Configuration**: Always provide schedules for all 7 days of the week
+2. **Inactive Days**: For closed days, set `activo: false` and use `"00:00:00"` for both opening and closing times
+3. **Time Validation**: Ensure closing time is after opening time
+4. **Bulk Updates**: This endpoint replaces all schedules for a unit, so always send the complete schedule configuration
+5. **Timezone Consideration**: All times are stored in the system's timezone; ensure consistency across your application
+
+## Important Notes
+
+<Info>
+  The save schedules endpoint replaces all existing schedules for the specified unit. Always send the complete schedule configuration, including days you want to keep unchanged.
+</Info>
+
+<Warning>
+  Ensure that the closing time (`cierre`) is after the opening time (`apertura`) to avoid validation issues. For 24-hour operations, use `00:00:00` to `23:59:59`.
+</Warning>
+
+## Related Endpoints
+
+- [Units API](/api/organization/units) - Manage organizational units
+- [Attendance API](/api/attendance) - Track employee attendance based on operating hours
+- [Kiosk API](/api/kiosk) - Configure kiosk mode settings that may depend on operating hours

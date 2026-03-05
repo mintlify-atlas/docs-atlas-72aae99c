@@ -1,0 +1,325 @@
+---
+title: Permission Structure
+description: Understand the permission hierarchy and UI module permissions
+---
+
+## Overview
+
+Integra uses a hierarchical permission structure based on UI modules (UIModulo). This allows fine-grained control over what users can access in the application.
+
+## Permission Hierarchy
+
+Permissions are organized in a tree structure where:
+
+- **Root Modules**: Top-level features (e.g., Asistencia, Empleados, Reportes)
+- **Sub-modules**: Nested features within a parent module
+- **Actions**: Specific operations within a module (e.g., ver, crear, editar, eliminar)
+
+### Example Structure
+
+```
+Asistencia
+├── Ver asistencias (asistencia.ver)
+├── Registrar asistencia (asistencia.registrar)
+└── Reportes
+    ├── Ver reportes (asistencia.reportes.ver)
+    └── Exportar Excel (asistencia.reportes.exportar)
+
+Empleados
+├── Ver empleados (empleados.ver)
+├── Crear empleado (empleados.crear)
+└── Editar empleado (empleados.editar)
+```
+
+## Get Permission Tree
+
+Retrieve the complete hierarchical structure of all available permissions.
+
+### Endpoint
+
+```http
+GET /ui-node/tree
+```
+
+### Response
+
+<ResponseField name="data" type="array">
+  <Expandable title="UINode">
+    <ResponseField name="id" type="integer">
+      Node ID
+    </ResponseField>
+    
+    <ResponseField name="codigo" type="string">
+      Permission code/identifier (e.g., "asistencia.ver")
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      Display name of the permission
+    </ResponseField>
+    
+    <ResponseField name="descripcion" type="string">
+      Description of what this permission allows
+    </ResponseField>
+    
+    <ResponseField name="tipo" type="string">
+      Type of node (e.g., "MODULO", "ACCION")
+    </ResponseField>
+    
+    <ResponseField name="icono" type="string">
+      Icon identifier for UI display
+    </ResponseField>
+    
+    <ResponseField name="ruta" type="string">
+      URL route associated with this permission
+    </ResponseField>
+    
+    <ResponseField name="orden" type="integer">
+      Display order within parent
+    </ResponseField>
+    
+    <ResponseField name="padre" type="integer">
+      Parent node ID (null for root nodes)
+    </ResponseField>
+    
+    <ResponseField name="hijos" type="array">
+      Array of child UINode objects (recursive structure)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Catálogo jerárquico recuperado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/ui-node/tree \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "codigo": "asistencia",
+      "nombre": "Asistencia",
+      "descripcion": "Módulo de gestión de asistencias",
+      "tipo": "MODULO",
+      "icono": "clock",
+      "ruta": "/asistencia",
+      "orden": 1,
+      "padre": null,
+      "hijos": [
+        {
+          "id": 2,
+          "codigo": "asistencia.ver",
+          "nombre": "Ver asistencias",
+          "descripcion": "Permite visualizar registros de asistencia",
+          "tipo": "ACCION",
+          "icono": "eye",
+          "ruta": "/asistencia/lista",
+          "orden": 1,
+          "padre": 1,
+          "hijos": []
+        },
+        {
+          "id": 3,
+          "codigo": "asistencia.registrar",
+          "nombre": "Registrar asistencia",
+          "descripcion": "Permite registrar entradas y salidas",
+          "tipo": "ACCION",
+          "icono": "plus",
+          "ruta": "/asistencia/registrar",
+          "orden": 2,
+          "padre": 1,
+          "hijos": []
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "codigo": "empleados",
+      "nombre": "Empleados",
+      "descripcion": "Módulo de gestión de empleados",
+      "tipo": "MODULO",
+      "icono": "users",
+      "ruta": "/empleados",
+      "orden": 2,
+      "padre": null,
+      "hijos": [
+        {
+          "id": 11,
+          "codigo": "empleados.ver",
+          "nombre": "Ver empleados",
+          "descripcion": "Permite visualizar la lista de empleados",
+          "tipo": "ACCION",
+          "icono": "eye",
+          "ruta": "/empleados/lista",
+          "orden": 1,
+          "padre": 10,
+          "hijos": []
+        },
+        {
+          "id": 12,
+          "codigo": "empleados.crear",
+          "nombre": "Crear empleado",
+          "descripcion": "Permite registrar nuevos empleados",
+          "tipo": "ACCION",
+          "icono": "plus",
+          "ruta": "/empleados/crear",
+          "orden": 2,
+          "padre": 10,
+          "hijos": []
+        }
+      ]
+    }
+  ],
+  "message": "Catálogo jerárquico recuperado",
+  "success": true
+}
+```
+
+## Permission Usage
+
+### In Roles
+
+Permissions are assigned to roles, and roles are assigned to users. This provides:
+
+- **Centralized Management**: Update role permissions once, affects all users with that role
+- **Scalability**: Easily manage permissions for large numbers of users
+- **Flexibility**: Users can have multiple roles, permissions are combined
+
+### In User Tokens
+
+When a user logs in, their JWT token includes their permissions in the `uiPermissions` array:
+
+```json
+{
+  "token": "eyJhbGciOiJSUzI1NiJ9...",
+  "uiPermissions": [
+    "asistencia.ver",
+    "asistencia.registrar",
+    "empleados.ver",
+    "reportes.generar"
+  ]
+}
+```
+
+The client application can use these permissions to:
+
+- Show/hide UI elements
+- Enable/disable features
+- Route guards and navigation control
+- Dynamic menu generation
+
+### Backend Authorization
+
+The server validates permissions on each request:
+
+1. Extract JWT token from Authorization header
+2. Decode and validate token signature
+3. Load user's roles and associated permissions
+4. Check if required permission exists for the requested endpoint
+5. Allow or deny access
+
+## Permission Codes
+
+Permission codes follow a dot-notation pattern:
+
+```
+<module>.<submodule>.<action>
+```
+
+### Common Modules
+
+- `asistencia` - Attendance management
+- `empleados` - Employee management
+- `reportes` - Report generation
+- `kioscos` - Kiosk configuration
+- `usuarios` - User administration
+- `roles` - Role management
+- `credenciales` - Credential management
+- `observaciones` - Observation/note management
+
+### Common Actions
+
+- `ver` - View/read access
+- `crear` - Create new records
+- `editar` - Update existing records
+- `eliminar` - Delete records
+- `exportar` - Export data
+- `importar` - Import data
+- `configurar` - Configure settings
+
+### Examples
+
+| Permission Code | Description |
+|----------------|-------------|
+| `asistencia.ver` | View attendance records |
+| `asistencia.registrar` | Register attendance |
+| `empleados.crear` | Create new employees |
+| `empleados.editar` | Edit employee information |
+| `reportes.generar` | Generate reports |
+| `reportes.exportar.excel` | Export reports to Excel |
+| `kioscos.configurar` | Configure kiosk settings |
+| `usuarios.administrar` | Manage user accounts |
+
+## Best Practices
+
+### Principle of Least Privilege
+
+<Tip>
+Grant users only the permissions they need to perform their job functions. Start with minimal permissions and add more as needed.
+</Tip>
+
+### Role Design
+
+Create roles based on job functions:
+
+- **Administrator**: Full system access
+- **HR Manager**: Employee and attendance management
+- **Supervisor**: View reports and manage team attendance
+- **Employee**: Register own attendance only
+
+### Permission Naming
+
+Use consistent, descriptive names:
+
+- Use Spanish for display names (matches UI language)
+- Use English dot-notation codes for programmatic access
+- Keep codes short but meaningful
+- Group related permissions under common parent modules
+
+### Testing
+
+Always test permission changes:
+
+1. Create a test role with specific permissions
+2. Assign test user to that role
+3. Log in as test user
+4. Verify UI elements show/hide correctly
+5. Verify API endpoints accept/reject requests appropriately
+
+<Warning>
+Be careful when modifying permissions for production roles. Changes take effect immediately for all users with that role.
+</Warning>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="User Management" icon="user" href="/api/access/users">
+    Manage users and their permissions
+  </Card>
+  
+  <Card title="Role Management" icon="shield" href="/api/access/roles">
+    Create and configure roles
+  </Card>
+  
+  <Card title="Authentication" icon="lock" href="/authentication">
+    JWT tokens and login flow
+  </Card>
+</CardGroup>

@@ -1,0 +1,96 @@
+---
+title: 'Departments API'
+description: 'Manage organizational departments'
+---
+
+# Departments API
+
+The Departments API provides endpoints to retrieve department information within the organization.
+
+## Endpoints
+
+### Get All Departments
+
+Retrieves a list of all departments in the organization.
+
+<CodeGroup>
+```bash cURL
+curl -X GET "https://api.integra.com/departamentos" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/departamentos', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/departamentos"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `GET`
+
+**Endpoint:** `/departamentos`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Recursos Humanos"
+    },
+    {
+      "id": 2,
+      "nombre": "Tecnología"
+    },
+    {
+      "id": 3,
+      "nombre": "Ventas"
+    }
+  ],
+  "message": "Departamentos"
+}
+```
+
+## Entity Structure
+
+### Department Entity
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | Integer | Unique identifier for the department |
+| `nombre` | String | Name of the department |
+
+## Relationships
+
+Departments are organizational units that:
+- Can be associated with employees
+- May contain multiple positions (puestos)
+- Part of the organizational hierarchy structure
+
+## Related Endpoints
+
+- [Positions API](/api/organization/positions) - Manage job positions within departments
+- [Units API](/api/organization/units) - Manage organizational units

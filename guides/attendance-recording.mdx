@@ -1,0 +1,340 @@
+---
+title: 'Attendance Recording'
+description: 'Learn how to record employee attendance with shift management, breaks, and photo capture'
+---
+
+## Overview
+
+The Integra API provides comprehensive endpoints for managing employee attendance including shift start/end, break management, manual entries, and photo capture for verification.
+
+## Starting a Shift
+
+To start an employee's work shift, use the `/asistencia/iniciar` endpoint with the employee's information and optional photo.
+
+<Steps>
+  <Step title="Prepare the request">
+    Create a POST request with the employee ID, unit ID, and optional photo capture.
+
+    **Endpoint:** `POST /asistencia/iniciar`
+
+    **Request Body:**
+    ```json
+    {
+      "empleadoId": 123,
+      "unidadId": 5,
+      "foto": "base64_encoded_photo_string",
+      "unidadAsignadaId": 5,
+      "hora": "08:00:00"
+    }
+    ```
+
+    **Required Fields:**
+    - `empleadoId` - Employee ID (required)
+    - `unidadId` - Unit/location ID where attendance is recorded (required)
+
+    **Optional Fields:**
+    - `foto` - Base64 encoded photo for verification
+    - `unidadAsignadaId` - Assigned unit ID
+    - `hora` - Time of registration (LocalTime format)
+  </Step>
+
+  <Step title="Send the request">
+    Execute the curl command:
+
+    ```bash
+    curl -X POST https://api.example.com/asistencia/iniciar \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -d '{
+        "empleadoId": 123,
+        "unidadId": 5,
+        "hora": "08:00:00"
+      }'
+    ```
+  </Step>
+
+  <Step title="Handle the response">
+    **Success Response (200 OK):**
+    ```json
+    {
+      "data": null,
+      "message": "Jornada iniciada"
+    }
+    ```
+
+    The shift has been successfully started and recorded in the system.
+  </Step>
+</Steps>
+
+## Ending a Shift
+
+When an employee finishes their work shift, use the `/asistencia/finalizar` endpoint.
+
+<Steps>
+  <Step title="Prepare the end shift request">
+    **Endpoint:** `POST /asistencia/finalizar`
+
+    **Request Body:**
+    ```json
+    {
+      "empleadoId": 123,
+      "unidadId": 5,
+      "foto": "base64_encoded_photo_string",
+      "finDeposito": false,
+      "unidadAsignadaId": 5
+    }
+    ```
+
+    **Fields:**
+    - `empleadoId` - Employee ID (required)
+    - `unidadId` - Unit ID (required)
+    - `foto` - Photo capture (optional)
+    - `finDeposito` - Boolean flag for deposit completion
+    - `unidadAsignadaId` - Assigned unit ID
+  </Step>
+
+  <Step title="Execute the request">
+    ```bash
+    curl -X POST https://api.example.com/asistencia/finalizar \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -d '{
+        "empleadoId": 123,
+        "unidadId": 5,
+        "finDeposito": false
+      }'
+    ```
+  </Step>
+
+  <Step title="Verify completion">
+    **Success Response:**
+    ```json
+    {
+      "data": null,
+      "message": "Jornada finalizada"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Managing Breaks
+
+### Starting a Break
+
+Employees can start different types of breaks (meal breaks, other breaks) during their shift.
+
+<Steps>
+  <Step title="Initiate a break">
+    **Endpoint:** `POST /asistencia/pausa/iniciar`
+
+    **Request Body:**
+    ```json
+    {
+      "empleadoId": 123,
+      "unidadId": 5,
+      "pausa": "COMIDA",
+      "foto": "base64_encoded_photo_string",
+      "unidadAsignadaId": 5
+    }
+    ```
+
+    **Break Types (pausa field):**
+    - `COMIDA` - Meal break
+    - `OTRA` - Other break type
+
+    ```bash
+    curl -X POST https://api.example.com/asistencia/pausa/iniciar \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -d '{
+        "empleadoId": 123,
+        "unidadId": 5,
+        "pausa": "COMIDA"
+      }'
+    ```
+  </Step>
+
+  <Step title="Receive confirmation">
+    **Success Response:**
+    ```json
+    {
+      "data": null,
+      "message": "Pausa iniciada"
+    }
+    ```
+  </Step>
+</Steps>
+
+### Ending a Break
+
+When the employee returns from their break, finalize it with the corresponding endpoint.
+
+<Steps>
+  <Step title="End the break">
+    **Endpoint:** `POST /asistencia/pausa/finalizar`
+
+    **Request Body:**
+    ```json
+    {
+      "empleadoId": 123,
+      "unidadId": 5,
+      "pausa": "COMIDA",
+      "foto": "base64_encoded_photo_string"
+    }
+    ```
+
+    ```bash
+    curl -X POST https://api.example.com/asistencia/pausa/finalizar \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -d '{
+        "empleadoId": 123,
+        "unidadId": 5,
+        "pausa": "COMIDA"
+      }'
+    ```
+  </Step>
+
+  <Step title="Verify break completion">
+    **Success Response:**
+    ```json
+    {
+      "data": null,
+      "message": "Pausa registrada"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Manual Attendance Entry
+
+For corrections or backdated entries, administrators can manually register attendance records.
+
+<Steps>
+  <Step title="Prepare manual entry">
+    **Endpoint:** `POST /asistencia/manual`
+
+    **Request Body:**
+    ```json
+    {
+      "empleadoId": 123,
+      "tipoAccion": "iniciarJornada",
+      "hora": "08:30:00",
+      "observaciones": "Registro manual por falla en kiosco",
+      "unidadId": 5,
+      "pausa": "COMIDA",
+      "unidadAsignadaId": 5
+    }
+    ```
+
+    **Action Types (tipoAccion):**
+    - `iniciarJornada` - Start shift manually
+    - `finalizarJornada` - End shift manually
+    - `finalizarJornadaDeposito` - End shift with deposit
+    - `iniciarPausa` - Start break manually
+    - `finalizarPausa` - End break manually
+
+    **Required Fields:**
+    - `empleadoId` - Employee ID
+    - `tipoAccion` - Action type
+    - `hora` - Time of action (LocalTime format: HH:mm:ss)
+    - `observaciones` - Observations/notes explaining the manual entry
+    - `unidadId` - Unit ID
+  </Step>
+
+  <Step title="Submit manual entry">
+    ```bash
+    curl -X POST https://api.example.com/asistencia/manual \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_TOKEN" \
+      -d '{
+        "empleadoId": 123,
+        "tipoAccion": "iniciarJornada",
+        "hora": "08:30:00",
+        "observaciones": "Registro manual por falla en kiosco",
+        "unidadId": 5
+      }'
+    ```
+  </Step>
+
+  <Step title="Confirm registration">
+    **Success Response:**
+    ```json
+    {
+      "data": null,
+      "message": "Asistencia registrada"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Photo Capture Guidelines
+
+When including photos in attendance records:
+
+- **Format:** Base64 encoded string
+- **Purpose:** Employee verification and attendance validation
+- **Field:** `foto` parameter in request body
+- **Usage:** Optional but recommended for shift start/end and breaks
+
+**Example photo integration:**
+```json
+{
+  "empleadoId": 123,
+  "unidadId": 5,
+  "foto": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD..."
+}
+```
+
+## Updating and Deleting Records
+
+### Update Shift Record
+
+**Endpoint:** `PUT /asistencia/jornada`
+
+Update an existing shift record with new information.
+
+### Update Break Record
+
+**Endpoint:** `PUT /asistencia/pausa`
+
+Modify break information for an employee.
+
+### Delete Shift
+
+**Endpoint:** `DELETE /asistencia/jornada/{id}`
+
+```bash
+curl -X DELETE https://api.example.com/asistencia/jornada/456 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Delete Break
+
+**Endpoint:** `DELETE /asistencia/pausa/{id}`
+
+```bash
+curl -X DELETE https://api.example.com/asistencia/pausa/789 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Reference
+
+**Controller:** `AsistenciaCommandController.java` at `/asistencia/controller/AsistenciaCommandController.java:1`
+
+**Related DTOs:**
+- `RegistroDTO.java` - Standard attendance registration
+- `RegistroManualDTO.java` - Manual attendance entry
+- `ActualizarJornadaDTO.java` - Update shift records
+- `ActualizarPausaDTO.java` - Update break records
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Reports Generation" icon="chart-line" href="/guides/reports-generation">
+    Generate attendance reports and export to Excel
+  </Card>
+  <Card title="Employee Management" icon="users" href="/guides/employee-management">
+    Manage employee information and assignments
+  </Card>
+</CardGroup>

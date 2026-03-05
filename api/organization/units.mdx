@@ -1,0 +1,510 @@
+---
+title: 'Units API'
+description: 'Manage organizational units and locations'
+---
+
+# Units API
+
+The Units API provides comprehensive CRUD operations for managing organizational units (unidades), which represent physical locations, branches, or operational sites within the organization.
+
+## Endpoints
+
+### Create Unit
+
+Registers a new organizational unit.
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.integra.com/unidades/registrar" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clave": "UN001",
+    "nombre": "Sucursal Centro",
+    "localizacion": "Centro Histórico",
+    "telefono": "5551234567",
+    "activo": true,
+    "direccion": "Av. Principal 123, Col. Centro",
+    "email": "centro@empresa.com",
+    "idZona": 1,
+    "idEstado": 5,
+    "idSupervisor": 10
+  }'
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/unidades/registrar', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    clave: 'UN001',
+    nombre: 'Sucursal Centro',
+    localizacion: 'Centro Histórico',
+    telefono: '5551234567',
+    activo: true,
+    direccion: 'Av. Principal 123, Col. Centro',
+    email: 'centro@empresa.com',
+    idZona: 1,
+    idEstado: 5,
+    idSupervisor: 10
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/unidades/registrar"
+headers = {
+  "Authorization": "Bearer YOUR_TOKEN",
+  "Content-Type": "application/json"
+}
+payload = {
+  "clave": "UN001",
+  "nombre": "Sucursal Centro",
+  "localizacion": "Centro Histórico",
+  "telefono": "5551234567",
+  "activo": True,
+  "direccion": "Av. Principal 123, Col. Centro",
+  "email": "centro@empresa.com",
+  "idZona": 1,
+  "idEstado": 5,
+  "idSupervisor": 10
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `POST`
+
+**Endpoint:** `/unidades/registrar`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+- `Content-Type`: application/json (required)
+
+**Required Permissions:** `UNIDADES_CREAR`
+
+**Body Parameters:**
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `clave` | String | Yes | 1-10 characters | Unique code for the unit |
+| `nombre` | String | Yes | 1-100 characters | Name of the unit |
+| `localizacion` | String | No | Max 80 characters | Location description |
+| `telefono` | String | No | Max 15 characters | Contact phone number |
+| `activo` | Boolean | No | - | Active status of the unit |
+| `direccion` | String | No | Max 255 characters | Physical address |
+| `email` | String | No | Max 100 characters | Contact email |
+| `idZona` | Integer | Yes | - | Zone ID where the unit is located |
+| `idEstado` | Integer | Yes | - | State/Province ID |
+| `idSupervisor` | Integer | Yes | - | ID of the employee supervising this unit |
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": {
+    "id": 45,
+    "clave": "UN001",
+    "nombre": "Sucursal Centro",
+    "nombreCompleto": "UN001 - Sucursal Centro",
+    "activo": true,
+    "operativa": true,
+    "contacto": {
+      "direccion": "Av. Principal 123, Col. Centro",
+      "telefono": "5551234567",
+      "email": "centro@empresa.com",
+      "localizacion": "Centro Histórico",
+      "zona": {
+        "id": 1,
+        "nombre": "Zona Norte"
+      }
+    },
+    "supervisor": {
+      "id": 10,
+      "nombre": "Juan Pérez"
+    }
+  },
+  "message": "Unidad registrada"
+}
+```
+
+### Update Unit
+
+Updates an existing organizational unit.
+
+<CodeGroup>
+```bash cURL
+curl -X PUT "https://api.integra.com/unidades/actualizar" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 45,
+    "clave": "UN001",
+    "nombre": "Sucursal Centro Actualizada",
+    "localizacion": "Centro Histórico",
+    "telefono": "5551234567",
+    "activo": true,
+    "direccion": "Av. Principal 123, Col. Centro",
+    "email": "centro@empresa.com",
+    "idZona": 1,
+    "idEstado": 5,
+    "idSupervisor": 10
+  }'
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/unidades/actualizar', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    id: 45,
+    clave: 'UN001',
+    nombre: 'Sucursal Centro Actualizada',
+    localizacion: 'Centro Histórico',
+    telefono: '5551234567',
+    activo: true,
+    direccion: 'Av. Principal 123, Col. Centro',
+    email: 'centro@empresa.com',
+    idZona: 1,
+    idEstado: 5,
+    idSupervisor: 10
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/unidades/actualizar"
+headers = {
+  "Authorization": "Bearer YOUR_TOKEN",
+  "Content-Type": "application/json"
+}
+payload = {
+  "id": 45,
+  "clave": "UN001",
+  "nombre": "Sucursal Centro Actualizada",
+  "localizacion": "Centro Histórico",
+  "telefono": "5551234567",
+  "activo": True,
+  "direccion": "Av. Principal 123, Col. Centro",
+  "email": "centro@empresa.com",
+  "idZona": 1,
+  "idEstado": 5,
+  "idSupervisor": 10
+}
+
+response = requests.put(url, headers=headers, json=payload)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `PUT`
+
+**Endpoint:** `/unidades/actualizar`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+- `Content-Type`: application/json (required)
+
+**Required Permissions:** `UNIDADES_EDITAR`
+
+**Body Parameters:** Same as Create Unit, plus:
+
+| Field | Type | Required | Constraints | Description |
+|-------|------|----------|-------------|-------------|
+| `id` | Integer | Yes | Min value: 1 | ID of the unit to update |
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": null,
+  "message": "Unidad actualizada"
+}
+```
+
+### Update Unit Status
+
+Enables or disables a unit.
+
+<CodeGroup>
+```bash cURL
+# Enable unit
+curl -X PUT "https://api.integra.com/unidades/estatus/45/true" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Disable unit
+curl -X PUT "https://api.integra.com/unidades/estatus/45/false" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+// Enable unit
+fetch('https://api.integra.com/unidades/estatus/45/true', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+
+// Disable unit
+fetch('https://api.integra.com/unidades/estatus/45/false', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+# Enable unit
+url = "https://api.integra.com/unidades/estatus/45/true"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+response = requests.put(url, headers=headers)
+print(response.json())
+
+# Disable unit
+url = "https://api.integra.com/unidades/estatus/45/false"
+response = requests.put(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `PUT`
+
+**Endpoint:** `/unidades/estatus/{id}/{estatus}`
+
+**Path Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | Integer | ID of the unit |
+| `estatus` | Boolean | `true` to enable, `false` to disable |
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example (Enable)
+{
+  "data": null,
+  "message": "Unidad habilitada"
+}
+```
+
+```json Response Example (Disable)
+{
+  "data": null,
+  "message": "Unidad deshabilitada"
+}
+```
+
+### Delete Unit
+
+Permanently deletes a unit from the system.
+
+<Warning>
+  Deleting a unit is a permanent operation. Ensure the unit is no longer needed and has no critical dependencies before deletion.
+</Warning>
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE "https://api.integra.com/unidades/45" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/unidades/45', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/unidades/45"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+
+response = requests.delete(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `DELETE`
+
+**Endpoint:** `/unidades/{id}`
+
+**Path Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | Integer | ID of the unit to delete |
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": null,
+  "message": "Unidad eliminada"
+}
+```
+
+## Entity Structure
+
+### Unit Entity
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | Integer | Unique identifier for the unit |
+| `clave` | String | Unique code for the unit (1-10 characters) |
+| `nombre` | String | Short name of the unit |
+| `nombreCompleto` | String | Full name combining code and name |
+| `activo` | Boolean | Whether the unit is active |
+| `operativa` | Boolean | Whether the unit is operational |
+| `contacto` | Object | Contact information (see below) |
+| `requiereCamara` | Boolean | Whether the unit requires camera integration |
+| `codigoAutorizacionKiosco` | String | Authorization code for kiosk mode |
+| `requiereReset` | Boolean | Whether the unit requires reset |
+| `versionKiosco` | Integer | Version of the kiosk software |
+| `supervisor` | Object | Supervisor employee information |
+| `tiempoCompensacion` | Time | Compensation time configuration |
+| `tiempoEsperaKiosco` | Integer | Kiosk wait time in seconds |
+
+### Contact Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `direccion` | String | Physical address |
+| `telefono` | String | Contact phone number |
+| `email` | String | Contact email |
+| `localizacion` | String | Location description |
+| `estado` | Object | State/Province information |
+| `zona` | Object | Zone information |
+
+### Zone Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | Integer | Zone identifier |
+| `nombre` | String | Zone name |
+
+## Relationships
+
+Units have the following relationships:
+
+- **Zone**: Each unit belongs to a zone (idZona)
+- **State**: Each unit is located in a state/province (idEstado)
+- **Supervisor**: Each unit has an assigned supervisor employee (idSupervisor)
+- **Operating Schedules**: Units can have multiple operating schedules defining their hours of operation
+- **Employees**: Multiple employees can be assigned to a unit
+- **Kiosk Configuration**: Units can have kiosk mode settings for employee check-in/out
+
+## Validation Rules
+
+### Create/Update Unit
+
+- `clave`: Required, 1-10 characters, must be unique
+- `nombre`: Required, 1-100 characters
+- `localizacion`: Optional, max 80 characters
+- `telefono`: Optional, max 15 characters
+- `direccion`: Optional, max 255 characters
+- `email`: Optional, max 100 characters, must be valid email format
+- `idZona`: Required, must reference an existing zone
+- `idEstado`: Required, must reference an existing state
+- `idSupervisor`: Required, must reference an existing employee
+
+## Error Responses
+
+### Validation Error
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "clave",
+      "message": "La clave debe tener entre 1 y 10 caracteres."
+    },
+    {
+      "field": "email",
+      "message": "El email no puede exceder los 100 caracteres."
+    }
+  ]
+}
+```
+
+### Not Found Error
+
+**Status Code:** `404 Not Found`
+
+```json
+{
+  "error": "Unit not found",
+  "message": "No unit found with the specified ID"
+}
+```
+
+### Unauthorized Error
+
+**Status Code:** `403 Forbidden`
+
+```json
+{
+  "error": "Insufficient permissions",
+  "message": "You do not have permission to perform this action"
+}
+```
+
+## Related Endpoints
+
+- [Zones API](/api/organization/zones) - Manage geographical zones
+- [Operating Schedules API](/api/organization/schedules) - Configure unit operating hours
+- [Employees API](/api/employees) - Manage employees assigned to units

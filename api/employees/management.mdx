@@ -1,0 +1,512 @@
+---
+title: 'Employee Management'
+description: 'CRUD operations for managing employee data'
+---
+
+## List All Employees
+
+<api>GET /empleados</api>
+
+Retrieve a list of employees with optional filtering criteria.
+
+### Query Parameters
+
+<ParamField query="idSupervisor" type="integer">
+  Filter employees by supervisor ID
+</ParamField>
+
+<ParamField query="idPuesto" type="integer">
+  Filter employees by position ID
+</ParamField>
+
+<ParamField query="idZona" type="integer">
+  Filter employees by zone ID
+</ParamField>
+
+<ParamField query="clave" type="string">
+  Filter by employee code (partial match)
+</ParamField>
+
+<ParamField query="unidadId" type="integer">
+  Filter employees by business unit ID
+</ParamField>
+
+<ParamField query="estatus" type="string">
+  Filter by employee status (e.g., "A" for active)
+</ParamField>
+
+<ParamField query="idResponsable" type="integer">
+  Filter by responsible person ID
+</ParamField>
+
+<ParamField query="activos" type="boolean">
+  Filter to show only active employees (true) or all employees (false/null)
+</ParamField>
+
+<ParamField query="id" type="integer">
+  Filter by specific employee ID
+</ParamField>
+
+### Request Example
+
+```bash
+curl --request GET \
+  --url 'https://api.integra.com/empleados?unidadId=5&activos=true' \
+  --header 'Authorization: Bearer {token}'
+```
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Operation success status
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of employee objects
+  
+  <Expandable title="Employee object structure">
+    <ResponseField name="id" type="integer">
+      Employee ID
+    </ResponseField>
+    <ResponseField name="codigo" type="string">
+      Employee code
+    </ResponseField>
+    <ResponseField name="nombre" type="string">
+      First name
+    </ResponseField>
+    <ResponseField name="apellidoPaterno" type="string">
+      Paternal surname
+    </ResponseField>
+    <ResponseField name="apellidoMaterno" type="string">
+      Maternal surname
+    </ResponseField>
+    <ResponseField name="nombreCompleto" type="string">
+      Full name
+    </ResponseField>
+    <ResponseField name="puesto" type="object">
+      Position information (id, nombre, activo)
+    </ResponseField>
+    <ResponseField name="departamento" type="object">
+      Department information (id, nombre)
+    </ResponseField>
+    <ResponseField name="unidad" type="object">
+      Business unit information
+    </ResponseField>
+    <ResponseField name="contacto" type="object">
+      Contact information (telefono, email)
+    </ResponseField>
+    <ResponseField name="fechaAlta" type="string">
+      Hire date (YYYY-MM-DD)
+    </ResponseField>
+    <ResponseField name="fechaBaja" type="string">
+      Termination date (YYYY-MM-DD)
+    </ResponseField>
+    <ResponseField name="fechaReingreso" type="string">
+      Rehire date (YYYY-MM-DD)
+    </ResponseField>
+    <ResponseField name="estatus" type="string">
+      Employee status
+    </ResponseField>
+    <ResponseField name="sexo" type="string">
+      Gender
+    </ResponseField>
+    <ResponseField name="gestores" type="array">
+      List of assigned managers
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Response message (e.g., "Empleado")
+</ResponseField>
+
+### Response Example
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "codigo": "EMP001",
+      "nombre": "Juan",
+      "apellidoPaterno": "García",
+      "apellidoMaterno": "López",
+      "nombreCompleto": "Juan García López",
+      "puesto": {
+        "id": 10,
+        "nombre": "Desarrollador",
+        "activo": true
+      },
+      "departamento": {
+        "id": 5,
+        "nombre": "Tecnología"
+      },
+      "unidad": {
+        "id": 2,
+        "clave": "TI",
+        "nombre": "Tecnologías de la Información",
+        "nombreCompleto": "Unidad de TI",
+        "activo": true
+      },
+      "contacto": {
+        "telefono": "555-1234",
+        "email": "juan.garcia@integra.com"
+      },
+      "fechaAlta": "2022-01-15",
+      "fechaBaja": null,
+      "fechaReingreso": null,
+      "estatus": "A",
+      "sexo": "M",
+      "gestores": []
+    }
+  ],
+  "message": "Empleado"
+}
+```
+
+---
+
+## Get Supervisors
+
+<api>GET /empleados/supervisores</api>
+
+Retrieve a list of employees who have supervisor roles.
+
+### Query Parameters
+
+<ParamField query="activos" type="boolean">
+  Filter to show only active supervisors (true) or all supervisors (false/null)
+</ParamField>
+
+### Request Example
+
+```bash
+curl --request GET \
+  --url 'https://api.integra.com/empleados/supervisores?activos=true' \
+  --header 'Authorization: Bearer {token}'
+```
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Operation success status
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of supervisor employee objects (same structure as employee objects)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Response message (e.g., "Supervisores activos")
+</ResponseField>
+
+### Response Example
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 25,
+      "codigo": "SUP001",
+      "nombre": "María",
+      "apellidoPaterno": "Rodríguez",
+      "apellidoMaterno": "Martínez",
+      "nombreCompleto": "María Rodríguez Martínez",
+      "puesto": {
+        "id": 15,
+        "nombre": "Supervisor de Área",
+        "activo": true
+      },
+      "departamento": {
+        "id": 5,
+        "nombre": "Tecnología"
+      },
+      "contacto": {
+        "telefono": "555-5678",
+        "email": "maria.rodriguez@integra.com"
+      },
+      "estatus": "A"
+    }
+  ],
+  "message": "Supervisores activos"
+}
+```
+
+---
+
+## Get Employee Details
+
+<api>GET /empleados/{id}/detalles</api>
+
+Retrieve comprehensive details for a specific employee, including organizational relationships and assigned managers.
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the employee
+</ParamField>
+
+### Request Example
+
+```bash
+curl --request GET \
+  --url 'https://api.integra.com/empleados/123/detalles' \
+  --header 'Authorization: Bearer {token}'
+```
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Operation success status
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Detailed employee object
+  
+  <Expandable title="Complete employee details">
+    <ResponseField name="id" type="integer">
+      Employee ID
+    </ResponseField>
+    <ResponseField name="codigo" type="string">
+      Employee code
+    </ResponseField>
+    <ResponseField name="nombre" type="string">
+      First name
+    </ResponseField>
+    <ResponseField name="apellidoPaterno" type="string">
+      Paternal surname
+    </ResponseField>
+    <ResponseField name="apellidoMaterno" type="string">
+      Maternal surname
+    </ResponseField>
+    <ResponseField name="nombreCompleto" type="string">
+      Full name
+    </ResponseField>
+    <ResponseField name="puesto" type="object">
+      Position details
+      - id (integer): Position ID
+      - nombre (string): Position name
+      - activo (boolean): Active status
+    </ResponseField>
+    <ResponseField name="departamento" type="object">
+      Department details
+      - id (integer): Department ID
+      - nombre (string): Department name
+    </ResponseField>
+    <ResponseField name="unidad" type="object">
+      Business unit details including supervisor information
+    </ResponseField>
+    <ResponseField name="contacto" type="object">
+      Complete contact information
+      - telefono (string): Phone number
+      - email (string): Email address
+      - direccion (string): Physical address
+      - localizacion (string): Location
+      - estado (object): State/province information
+      - zona (object): Zone/region information
+    </ResponseField>
+    <ResponseField name="fechaAlta" type="string">
+      Hire date (YYYY-MM-DD)
+    </ResponseField>
+    <ResponseField name="fechaBaja" type="string">
+      Termination date (YYYY-MM-DD)
+    </ResponseField>
+    <ResponseField name="fechaReingreso" type="string">
+      Rehire date (YYYY-MM-DD)
+    </ResponseField>
+    <ResponseField name="estatus" type="string">
+      Employee status
+    </ResponseField>
+    <ResponseField name="sexo" type="string">
+      Gender
+    </ResponseField>
+    <ResponseField name="gestores" type="array">
+      List of managers assigned to this employee
+      - id (integer): Manager ID
+      - nombreCompleto (string): Manager's full name
+      - nivel (integer): Authorization level
+      - proceso (string): Process type
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Response message (e.g., "Detalles de empleado")
+</ResponseField>
+
+### Response Example
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 123,
+    "codigo": "EMP123",
+    "nombre": "Carlos",
+    "apellidoPaterno": "Hernández",
+    "apellidoMaterno": "Pérez",
+    "nombreCompleto": "Carlos Hernández Pérez",
+    "puesto": {
+      "id": 12,
+      "nombre": "Analista Senior",
+      "activo": true
+    },
+    "departamento": {
+      "id": 3,
+      "nombre": "Operaciones"
+    },
+    "unidad": {
+      "id": 8,
+      "clave": "OPS-01",
+      "nombre": "Operaciones Norte",
+      "nombreCompleto": "Unidad de Operaciones Norte",
+      "activo": true,
+      "operativa": true,
+      "supervisor": {
+        "id": 25,
+        "nombreCompleto": "María Rodríguez Martínez"
+      }
+    },
+    "contacto": {
+      "telefono": "555-9876",
+      "email": "carlos.hernandez@integra.com",
+      "direccion": "Av. Principal 123",
+      "localizacion": "Edificio A, Piso 3",
+      "estado": {
+        "id": 1,
+        "codigo": "NL",
+        "nombre": "Nuevo León"
+      },
+      "zona": {
+        "id": 5,
+        "nombre": "Norte"
+      }
+    },
+    "fechaAlta": "2021-03-10",
+    "fechaBaja": null,
+    "fechaReingreso": null,
+    "estatus": "A",
+    "sexo": "M",
+    "gestores": [
+      {
+        "id": 25,
+        "nombreCompleto": "María Rodríguez Martínez",
+        "nivel": 1,
+        "proceso": "Vacaciones"
+      },
+      {
+        "id": 45,
+        "nombreCompleto": "Roberto González Díaz",
+        "nivel": 2,
+        "proceso": "Permisos"
+      }
+    ]
+  },
+  "message": "Detalles de empleado"
+}
+```
+
+---
+
+## Error Responses
+
+All endpoints may return error responses in the following format:
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "data": null
+}
+```
+
+### Common Error Scenarios
+
+<AccordionGroup>
+  <Accordion title="404 Not Found">
+    Returned when an employee with the specified ID does not exist.
+    
+    ```json
+    {
+      "success": false,
+      "message": "Empleado no encontrado",
+      "data": null
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="401 Unauthorized">
+    Returned when the authentication token is missing or invalid.
+    
+    ```json
+    {
+      "success": false,
+      "message": "Token de autenticación inválido",
+      "data": null
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="400 Bad Request">
+    Returned when request parameters are invalid.
+    
+    ```json
+    {
+      "success": false,
+      "message": "Parámetros de solicitud inválidos",
+      "data": null
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="500 Internal Server Error">
+    Returned when an unexpected server error occurs.
+    
+    ```json
+    {
+      "success": false,
+      "message": "Error interno del servidor",
+      "data": null
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Notes
+
+<Note>
+  The controller currently only provides read operations (GET endpoints). Create, update, and delete operations are not yet implemented in the EmpleadoController.
+</Note>
+
+<Info>
+  The employee list endpoint supports multiple filter combinations. You can combine any of the query parameters to narrow down your search results.
+</Info>
+
+<Warning>
+  When filtering by `activos=true`, only employees with status "A" (Active) will be returned. Make sure to handle cases where the filtered list might be empty.
+</Warning>
+
+<Tip>
+  For better performance when retrieving employee lists, use specific filters (like `unidadId` or `idPuesto`) rather than fetching all employees and filtering on the client side.
+</Tip>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api/auth/login">
+    Learn how to authenticate API requests
+  </Card>
+  <Card title="Departments" icon="building" href="/api/organization/departments">
+    Manage department information
+  </Card>
+  <Card title="Positions" icon="briefcase" href="/api/organization/positions">
+    Manage position definitions
+  </Card>
+  <Card title="Business Units" icon="sitemap" href="/api/organization/units">
+    Manage business unit structure
+  </Card>
+</CardGroup>

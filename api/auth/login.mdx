@@ -1,0 +1,244 @@
+---
+title: "Login"
+description: "Authenticate users and obtain JWT tokens for API access"
+icon: "right-to-bracket"
+---
+
+## POST /auth/login
+
+Authenticates a user with username and password credentials and returns a JWT token for subsequent API requests.
+
+**Authentication**: None required (public endpoint)
+
+**Source**: `LoginController.java:21`
+
+### Request
+
+<ParamField body="username" type="string" required>
+  Username for authentication. Must be between 3 and 50 characters.
+  
+  **Validation**: 
+  - Required field
+  - Minimum length: 3 characters
+  - Maximum length: 50 characters
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User password. Must be between 1 and 100 characters.
+  
+  **Validation**:
+  - Required field  
+  - Minimum length: 1 character
+  - Maximum length: 100 characters
+</ParamField>
+
+### Response
+
+<ResponseField name="token" type="string">
+  JWT authentication token. Include this token in the `Authorization` header as `Bearer {token}` for authenticated requests.
+</ResponseField>
+
+<ResponseField name="employeeName" type="object">
+  Employee information associated with the authenticated user.
+  
+  <Expandable title="employeeName properties">
+    <ResponseField name="id" type="integer">
+      Unique employee identifier
+    </ResponseField>
+    
+    <ResponseField name="codigo" type="string">
+      Employee code
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      First name
+    </ResponseField>
+    
+    <ResponseField name="apellidoPaterno" type="string">
+      Paternal surname
+    </ResponseField>
+    
+    <ResponseField name="apellidoMaterno" type="string">
+      Maternal surname
+    </ResponseField>
+    
+    <ResponseField name="nombreCompleto" type="string">
+      Full name (concatenated)
+    </ResponseField>
+    
+    <ResponseField name="puesto" type="object">
+      Position information
+    </ResponseField>
+    
+    <ResponseField name="unidad" type="object">
+      Organizational unit
+    </ResponseField>
+    
+    <ResponseField name="departamento" type="object">
+      Department information
+    </ResponseField>
+    
+    <ResponseField name="contacto" type="object">
+      Contact information
+    </ResponseField>
+    
+    <ResponseField name="fechaAlta" type="string">
+      Hire date (ISO 8601 date format)
+    </ResponseField>
+    
+    <ResponseField name="fechaBaja" type="string">
+      Termination date (ISO 8601 date format, nullable)
+    </ResponseField>
+    
+    <ResponseField name="estatus" type="string">
+      Employee status
+    </ResponseField>
+    
+    <ResponseField name="sexo" type="string">
+      Gender
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="uiPermissions" type="array">
+  Array of UI permission strings that determine which features and sections the user can access in the application.
+</ResponseField>
+
+### Error Responses
+
+<ResponseField name="401 Unauthorized" type="error">
+  Returned when credentials are invalid or user is not found.
+  
+  ```json
+  {
+    "timestamp": "2026-03-05T12:00:00.000+00:00",
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "Invalid credentials",
+    "path": "/auth/login"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="400 Bad Request" type="error">
+  Returned when request validation fails (e.g., missing fields, invalid format).
+  
+  ```json
+  {
+    "timestamp": "2026-03-05T12:00:00.000+00:00",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "El usuario no puede ser nulo.",
+    "path": "/auth/login"
+  }
+  ```
+</ResponseField>
+
+### Examples
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.integra.example.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "jdoe",
+    "password": "securePassword123"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.integra.example.com/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    username: 'jdoe',
+    password: 'securePassword123'
+  })
+});
+
+const data = await response.json();
+console.log('Token:', data.token);
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.integra.example.com/auth/login',
+    json={
+        'username': 'jdoe',
+        'password': 'securePassword123'
+    }
+)
+
+data = response.json()
+print(f"Token: {data['token']}")
+```
+
+```java Java
+HttpClient client = HttpClient.newHttpClient();
+HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create("https://api.integra.example.com/auth/login"))
+    .header("Content-Type", "application/json")
+    .POST(HttpRequest.BodyPublishers.ofString(
+        "{\"username\":\"jdoe\",\"password\":\"securePassword123\"}"
+    ))
+    .build();
+
+HttpResponse<String> response = client.send(request, 
+    HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());
+```
+</CodeGroup>
+
+### Success Response Example
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqZG9lIiwiaWF0IjoxNzA5NjQwMDAwLCJleHAiOjE3MDk3MjY0MDB9.abc123xyz",
+  "employeeName": {
+    "id": 12345,
+    "codigo": "EMP001",
+    "nombre": "John",
+    "apellidoPaterno": "Doe",
+    "apellidoMaterno": "Smith",
+    "nombreCompleto": "John Doe Smith",
+    "puesto": {
+      "id": 10,
+      "nombre": "Software Engineer"
+    },
+    "departamento": {
+      "id": 5,
+      "nombre": "Engineering"
+    },
+    "fechaAlta": "2020-01-15",
+    "estatus": "ACTIVO",
+    "sexo": "M"
+  },
+  "uiPermissions": [
+    "view_dashboard",
+    "manage_attendance",
+    "view_reports",
+    "access_kiosk"
+  ]
+}
+```
+
+## Using the JWT Token
+
+After successful authentication, include the JWT token in all subsequent API requests:
+
+```bash
+curl -X GET https://api.integra.example.com/api/employees \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+<Note>
+  JWT tokens have an expiration time. When a token expires, the client must re-authenticate using this login endpoint to obtain a new token.
+</Note>
+
+<Warning>
+  Always transmit credentials over HTTPS. Never log or expose JWT tokens in client-side code or version control.
+</Warning>

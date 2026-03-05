@@ -1,0 +1,349 @@
+---
+title: Role Management
+description: Manage roles and role-based permissions
+---
+
+## Overview
+
+Roles group permissions together and can be assigned to users. This provides a centralized way to manage access control across your organization.
+
+## List Roles
+
+Retrieve all available roles.
+
+### Endpoint
+
+```http
+GET /roles
+```
+
+### Response
+
+<ResponseField name="data" type="array">
+  <Expandable title="Role Object">
+    <ResponseField name="id" type="integer">
+      Role ID
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      Role name
+    </ResponseField>
+    
+    <ResponseField name="descripcion" type="string">
+      Role description
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Roles recuperados"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/roles \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Administrador",
+      "descripcion": "Acceso completo al sistema"
+    },
+    {
+      "id": 2,
+      "nombre": "Supervisor",
+      "descripcion": "Gestión de empleados y reportes"
+    },
+    {
+      "id": 3,
+      "nombre": "Empleado",
+      "descripcion": "Acceso básico para registro de asistencia"
+    }
+  ],
+  "message": "Roles recuperados",
+  "success": true
+}
+```
+
+---
+
+## Create Role
+
+Create a new role.
+
+### Endpoint
+
+```http
+POST /roles
+```
+
+### Request Body
+
+<ParamField body="nombre" type="string" required>
+  Role name
+</ParamField>
+
+<ParamField body="descripcion" type="string" optional>
+  Role description
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="object">
+  The newly created role object
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Rol agregado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X POST http://localhost:8081/comialex/api/integra/roles \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Gerente de RH",
+    "descripcion": "Gestión completa de recursos humanos"
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "data": {
+    "id": 4,
+    "nombre": "Gerente de RH",
+    "descripcion": "Gestión completa de recursos humanos"
+  },
+  "message": "Rol agregado",
+  "success": true
+}
+```
+
+---
+
+## Get Role with Permissions
+
+Retrieve a role along with its assigned permissions.
+
+### Endpoint
+
+```http
+GET /roles/{id}/permisos
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Role ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="object">
+  <Expandable title="Role with Permissions">
+    <ResponseField name="id" type="integer">
+      Role ID
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      Role name
+    </ResponseField>
+    
+    <ResponseField name="descripcion" type="string">
+      Role description
+    </ResponseField>
+    
+    <ResponseField name="permisos" type="array">
+      Array of permission objects or identifiers
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Rol con permisos"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/roles/1/permisos \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": {
+    "id": 1,
+    "nombre": "Administrador",
+    "descripcion": "Acceso completo al sistema",
+    "permisos": [
+      {
+        "id": 1,
+        "codigo": "asistencia.ver",
+        "nombre": "Ver asistencias"
+      },
+      {
+        "id": 2,
+        "codigo": "asistencia.registrar",
+        "nombre": "Registrar asistencias"
+      },
+      {
+        "id": 3,
+        "codigo": "empleados.ver",
+        "nombre": "Ver empleados"
+      }
+    ]
+  },
+  "message": "Rol con permisos",
+  "success": true
+}
+```
+
+---
+
+## Update Role
+
+Update role details (name and description).
+
+### Endpoint
+
+```http
+PATCH /roles/actualizar
+```
+
+### Request Body
+
+<ParamField body="id" type="integer" required>
+  Role ID to update
+</ParamField>
+
+<ParamField body="nombre" type="string" optional>
+  New role name
+</ParamField>
+
+<ParamField body="descripcion" type="string" optional>
+  New role description
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="null">
+  No data returned on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Rol actualizado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH http://localhost:8081/comialex/api/integra/roles/actualizar \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 4,
+    "nombre": "Gerente de Recursos Humanos",
+    "descripcion": "Gestión completa de RH y nómina"
+  }'
+```
+
+---
+
+## Update Role Permissions
+
+Update the permissions assigned to a role.
+
+### Endpoint
+
+```http
+PUT /roles/permisos
+```
+
+### Request Body
+
+<ParamField body="rolId" type="integer" required>
+  Role ID
+</ParamField>
+
+<ParamField body="permisos" type="array" required>
+  Array of permission IDs or codes to assign to this role
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="null">
+  No data returned on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Permisos actualizados"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PUT http://localhost:8081/comialex/api/integra/roles/permisos \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rolId": 4,
+    "permisos": [1, 2, 3, 5, 7]
+  }'
+```
+
+<Note>
+Updating role permissions affects all users assigned to that role. Changes take effect on their next authentication or token refresh.
+</Note>
+
+---
+
+## Delete Role
+
+Delete a role from the system.
+
+### Endpoint
+
+```http
+DELETE /roles/{id}
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Role ID to delete
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Rol eliminado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X DELETE http://localhost:8081/comialex/api/integra/roles/4 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+<Warning>
+Deleting a role that is assigned to users may cause access issues. Ensure users are reassigned to other roles before deletion.
+</Warning>

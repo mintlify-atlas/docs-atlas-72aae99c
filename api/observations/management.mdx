@@ -1,0 +1,486 @@
+---
+title: Observation Management
+description: Complete API reference for querying and managing observations
+---
+
+## Query Observations by Filter
+
+Retrieve observations with flexible filtering options.
+
+### Endpoint
+
+```http
+GET /observaciones/filtro
+```
+
+### Query Parameters
+
+<ParamField query="supervisorId" type="integer" optional>
+  Filter by supervisor ID
+</ParamField>
+
+<ParamField query="unidadId" type="integer" optional>
+  Filter by unit ID
+</ParamField>
+
+<ParamField query="areaId" type="integer" optional>
+  Filter by area ID
+</ParamField>
+
+<ParamField query="departamentoResponsableId" type="integer" optional>
+  Filter by responsible department ID
+</ParamField>
+
+<ParamField query="departamentoColaboradorId" type="integer" optional>
+  Filter by collaborator department ID
+</ParamField>
+
+<ParamField query="departamentoGeneraId" type="integer" optional>
+  Filter by originating department ID
+</ParamField>
+
+<ParamField query="zonaId" type="integer" optional>
+  Filter by geographic zone ID
+</ParamField>
+
+<ParamField query="prioridad" type="string" optional>
+  Filter by priority: ALTA, MEDIA, BAJA
+</ParamField>
+
+<ParamField query="tipoObservacionId" type="integer" optional>
+  Filter by observation type ID
+</ParamField>
+
+<ParamField query="estatusId" type="integer" optional>
+  Filter by status ID
+</ParamField>
+
+<ParamField query="folio" type="string" optional>
+  Filter by observation folio/tracking number
+</ParamField>
+
+<ParamField query="usuarioCreadorId" type="integer" optional>
+  Filter by creator user ID
+</ParamField>
+
+<ParamField query="creadoDesde" type="datetime" optional>
+  Filter by creation date from (ISO 8601)
+</ParamField>
+
+<ParamField query="creadoHasta" type="datetime" optional>
+  Filter by creation date until (ISO 8601)
+</ParamField>
+
+<ParamField query="pagina" type="integer" optional>
+  Page number for pagination (zero-based)
+</ParamField>
+
+<ParamField query="filas" type="integer" optional>
+  Number of rows per page
+</ParamField>
+
+<ParamField query="privado" type="boolean" optional>
+  Filter by private/public status
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="array">
+  <Expandable title="ResumenObservacion">
+    <ResponseField name="id" type="integer">
+      Observation ID
+    </ResponseField>
+    
+    <ResponseField name="folioObservacion" type="string">
+      Unique tracking number/folio
+    </ResponseField>
+    
+    <ResponseField name="unidadId" type="integer">
+      Unit ID where observation was made
+    </ResponseField>
+    
+    <ResponseField name="unidadNombreCompleto" type="string">
+      Full unit name
+    </ResponseField>
+    
+    <ResponseField name="tipoObservacionNombre" type="string">
+      Observation type name (e.g., Seguridad, Calidad)
+    </ResponseField>
+    
+    <ResponseField name="estatusNombre" type="string">
+      Current status name
+    </ResponseField>
+    
+    <ResponseField name="estatusColorBg" type="string">
+      Background color for status (hex code)
+    </ResponseField>
+    
+    <ResponseField name="departamentoOrigenNombre" type="string">
+      Originating department name
+    </ResponseField>
+    
+    <ResponseField name="titulo" type="string">
+      Observation title/brief description
+    </ResponseField>
+    
+    <ResponseField name="prioridad" type="string">
+      Priority level: ALTA, MEDIA, BAJA
+    </ResponseField>
+    
+    <ResponseField name="requiereSeguimiento" type="boolean">
+      Whether follow-up is required
+    </ResponseField>
+    
+    <ResponseField name="creado" type="string">
+      Creation timestamp (ISO 8601)
+    </ResponseField>
+    
+    <ResponseField name="modificado" type="string">
+      Last modification timestamp (ISO 8601)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?unidadId=5&prioridad=ALTA&estatusId=1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": 123,
+      "folioObservacion": "OBS-2026-001234",
+      "unidadId": 5,
+      "unidadNombreCompleto": "Planta Principal - Producción",
+      "tipoObservacionNombre": "Seguridad",
+      "estatusNombre": "Abierta",
+      "estatusColorBg": "#FF5722",
+      "departamentoOrigenNombre": "Producción",
+      "titulo": "Fuga de líquido en línea 3",
+      "prioridad": "ALTA",
+      "requiereSeguimiento": true,
+      "creado": "2026-03-05T14:30:00",
+      "modificado": "2026-03-05T14:30:00"
+    },
+    {
+      "id": 124,
+      "folioObservacion": "OBS-2026-001235",
+      "unidadId": 5,
+      "unidadNombreCompleto": "Planta Principal - Producción",
+      "tipoObservacionNombre": "Equipo",
+      "estatusNombre": "En Proceso",
+      "estatusColorBg": "#FFC107",
+      "departamentoOrigenNombre": "Mantenimiento",
+      "titulo": "Vibración anormal en motor A2",
+      "prioridad": "ALTA",
+      "requiereSeguimiento": true,
+      "creado": "2026-03-05T15:45:00",
+      "modificado": "2026-03-05T16:20:00"
+    }
+  ],
+  "message": "Observaciones recuperadas",
+  "success": true
+}
+```
+
+---
+
+## Query Unit Observations
+
+Retrieve public observations for a specific unit.
+
+### Endpoint
+
+```http
+GET /observaciones/unidad/filtro
+```
+
+<Note>
+This endpoint automatically sets `privado=false`, returning only public observations visible to all unit members.
+</Note>
+
+### Query Parameters
+
+Same as the general filter endpoint, but the `privado` parameter is automatically set to `false`.
+
+<ParamField query="unidadId" type="integer" required>
+  Unit ID (required for this endpoint)
+</ParamField>
+
+<ParamField query="prioridad" type="string" optional>
+  Filter by priority: ALTA, MEDIA, BAJA
+</ParamField>
+
+<ParamField query="tipoObservacionId" type="integer" optional>
+  Filter by observation type ID
+</ParamField>
+
+<ParamField query="estatusId" type="integer" optional>
+  Filter by status ID
+</ParamField>
+
+<ParamField query="creadoDesde" type="datetime" optional>
+  Filter by creation date from (ISO 8601)
+</ParamField>
+
+<ParamField query="creadoHasta" type="datetime" optional>
+  Filter by creation date until (ISO 8601)
+</ParamField>
+
+### Response
+
+Same structure as the general filter endpoint.
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/unidad/filtro?unidadId=5&prioridad=ALTA" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+<Tip>
+Use this endpoint for displaying observations on unit-specific dashboards or kiosk screens where only public information should be shown.
+</Tip>
+
+---
+
+## Update Observation Status
+
+Update the status of an observation.
+
+### Endpoint
+
+```http
+PUT /observaciones/actualizarEstatus/{id}/{estatusId}
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  Observation ID to update
+</ParamField>
+
+<ParamField path="estatusId" type="integer" required>
+  New status ID to assign
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="null">
+  No data returned on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Estatus actualizado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PUT http://localhost:8081/comialex/api/integra/observaciones/actualizarEstatus/123/3 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": null,
+  "message": "Estatus actualizado",
+  "success": true
+}
+```
+
+<Note>
+The system automatically records who updated the status and when. Check the `modificado` timestamp in subsequent queries.
+</Note>
+
+## Common Use Cases
+
+### Dashboard: High Priority Open Items
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?prioridad=ALTA&estatusId=1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Unit Safety Board: Public Observations
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/unidad/filtro?unidadId=5&tipoObservacionId=1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Monthly Report: All Resolved Observations
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?estatusId=3&creadoDesde=2026-03-01T00:00:00&creadoHasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Track Specific Observation by Folio
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?folio=OBS-2026-001234" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+## Priority Levels
+
+| Priority | Spanish | Description | Typical Response Time |
+|----------|---------|-------------|----------------------|
+| ALTA | Alta | High priority, immediate attention | < 24 hours |
+| MEDIA | Media | Medium priority, timely response | 2-3 days |
+| BAJA | Baja | Low priority, standard handling | 1 week |
+
+## Status Workflow Examples
+
+### Safety Incident Flow
+
+<Steps>
+  <Step title="Report Created">
+    Status: Abierta (Open)
+    
+    Employee or supervisor creates observation documenting the incident.
+  </Step>
+  
+  <Step title="Investigation Started">
+    Status: En Proceso (In Progress)
+    
+    Safety team begins investigation and corrective action.
+  </Step>
+  
+  <Step title="Issue Resolved">
+    Status: Resuelta (Resolved)
+    
+    Corrective actions completed, awaiting verification.
+  </Step>
+  
+  <Step title="Case Closed">
+    Status: Cerrada (Closed)
+    
+    Verification complete, observation archived.
+  </Step>
+</Steps>
+
+### Quality Issue Flow
+
+<Steps>
+  <Step title="Issue Identified">
+    Status: Abierta (Open)
+    
+    Quality control identifies defect or non-conformance.
+  </Step>
+  
+  <Step title="Root Cause Analysis">
+    Status: En Proceso (In Progress)
+    
+    Team investigates cause and develops corrective action.
+  </Step>
+  
+  <Step title="Corrected">
+    Status: Resuelta (Resolved)
+    
+    Issue corrected, process updated.
+  </Step>
+  
+  <Step title="Verified">
+    Status: Cerrada (Closed)
+    
+    Quality verified, no recurrence.
+  </Step>
+</Steps>
+
+## Filtering Best Practices
+
+### Combine Multiple Filters
+
+For precise queries, combine multiple filters:
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?unidadId=5&prioridad=ALTA&estatusId=1&tipoObservacionId=2" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+This retrieves: High priority, open, safety observations in unit 5.
+
+### Use Date Ranges for Reports
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?creadoDesde=2026-03-01T00:00:00&creadoHasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Pagination for Large Datasets
+
+```bash
+# First page (20 items)
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?pagina=0&filas=20" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Second page
+curl -X GET "http://localhost:8081/comialex/api/integra/observaciones/filtro?pagina=1&filas=20" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+## Error Handling
+
+### Invalid Status ID
+
+```json
+{
+  "success": false,
+  "message": "Estatus no encontrado",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `404 Not Found`
+
+### Observation Not Found
+
+```json
+{
+  "success": false,
+  "message": "Observación no encontrada",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `404 Not Found`
+
+### Unauthorized Access
+
+Attempting to view private observations without permission:
+
+```json
+{
+  "success": false,
+  "message": "Acceso denegado",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `403 Forbidden`
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Observations Overview" icon="clipboard" href="/api/observations/overview">
+    Learn about observation concepts
+  </Card>
+  
+  <Card title="Authentication" icon="lock" href="/authentication">
+    JWT tokens and access control
+  </Card>
+</CardGroup>

@@ -1,0 +1,298 @@
+---
+title: 'Attendance System'
+description: 'Understanding how employee attendance tracking works in Integra'
+---
+
+## Overview
+
+The attendance system in Integra tracks employee work shifts (jornadas) and breaks (pausas) throughout the workday. The system supports both automatic kiosk-based registration and manual entries, with optional photo verification for security.
+
+## Core Entities
+
+### AsistenciaModel
+
+The `AsistenciaModel` represents a complete work shift for an employee on a specific date:
+
+```java
+@Entity
+@Table(name = "asistencia")
+public class AsistenciaModel {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_empleado", nullable = false)
+    private EmpleadoEntity empleado;
+    
+    @NotNull
+    private LocalDate fecha;
+    
+    private LocalDateTime inicioJornada;
+    private LocalDateTime finJornada;
+    
+    private Boolean jornadaCerrada;
+    
+    private String pathFotoInicio;
+    private String pathFotoFin;
+    
+    @OneToMany(mappedBy = "asistencia", fetch = FetchType.LAZY)
+    private List<PausaModel> pausas;
+    
+    private Boolean cerradoAutomatico;
+    private Boolean inconsistencia;
+    private LocalTime tiempoCompensado;
+}
+```
+
+**Key fields:**
+- `empleado`: Reference to the employee
+- `fecha`: Date of the work shift
+- `inicioJornada`: Shift start timestamp
+- `finJornada`: Shift end timestamp
+- `jornadaCerrada`: Indicates if shift is completed
+- `pathFotoInicio` / `pathFotoFin`: Photo verification paths
+- `pausas`: Collection of breaks during the shift
+- `cerradoAutomatico`: Whether the shift was auto-closed
+- `tiempoCompensado`: Compensation time applied
+
+### PausaModel
+
+The `PausaModel` represents a break period during a work shift:
+
+```java
+@Entity
+@Table(name = "pausa")
+public class PausaModel {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_asistencia", nullable = false)
+    private AsistenciaModel asistencia;
+    
+    @NotNull
+    @Size(max = 30)
+    private String tipo;  // COMIDA, OTRA
+    
+    @NotNull
+    private LocalDateTime inicio;
+    
+    private LocalDateTime fin;
+    
+    private String pathFotoInicio;
+    private String pathFotoFin;
+}
+```
+
+**Break types:**
+- `COMIDA`: Meal break
+- `OTRA`: Other types of breaks
+
+## Shift Lifecycle
+
+### 1. Starting a Shift (Iniciar Jornada)
+
+When an employee starts their workday:
+
+```java
+@PostMapping("iniciar")
+public ResponseEntity<ResponseData<?>> iniciar(@Valid @RequestBody RegistroDTO dto) {
+    iniciarJornada.execute(new IniciarJornadaCommand(
+        dto.getEmpleadoId(), 
+        dto.getFoto(),
+        dto.getUnidadId(), 
+        dto.getUnidadAsignadaId(), 
+        dto.getHora()
+    ));
+    return success("Jornada iniciada");
+}
+```
+
+**Request parameters:**
+- `empleadoId`: Employee identifier
+- `foto`: Optional photo for verification
+- `unidadId`: Registration unit (kiosk location)
+- `unidadAsignadaId`: Assigned unit for work
+- `hora`: Manual time override (optional)
+
+### 2. Starting a Break (Iniciar Pausa)
+
+```java
+@PostMapping("/pausa/iniciar")
+public ResponseEntity<ResponseData<?>> iniciarPausa(@Valid @RequestBody RegistroDTO dto) {
+    iniciarPausa.execute(new IniciarPausaCommand(
+        dto.getEmpleadoId(), 
+        dto.getPausa(),
+        dto.getFoto(), 
+        dto.getUnidadId(), 
+        dto.getUnidadAsignadaId(), 
+        null
+    ));
+    return success("Pausa iniciada");
+}
+```
+
+### 3. Ending a Break (Finalizar Pausa)
+
+```java
+@PostMapping("/pausa/finalizar")
+public ResponseEntity<ResponseData<?>> finalizarPausa(@Valid @RequestBody RegistroDTO dto) {
+    finalizarPausa.execute(new FinalizarPausaCommand(
+        dto.getEmpleadoId(), 
+        dto.getPausa(),
+        dto.getFoto(), 
+        dto.getUnidadId(), 
+        dto.getUnidadAsignadaId(), 
+        null
+    ));
+    return success("Pausa registrada");
+}
+```
+
+### 4. Ending a Shift (Finalizar Jornada)
+
+```java
+@PostMapping("/finalizar")
+public ResponseEntity<ResponseData<?>> finalizar(@Valid @RequestBody RegistroDTO dto) {
+    finalizarJornada.execute(new FinalizarJornadaCommand(
+        dto.getEmpleadoId(), 
+        dto.getFoto(),
+        dto.getUnidadId(), 
+        dto.getFinDeposito(), 
+        dto.getUnidadAsignadaId(), 
+        null
+    ));
+    return success("Jornada finalizada");
+}
+```
+
+## Registration Methods
+
+### Automatic Registration
+
+Employees register through kiosk terminals at their work location. The system automatically captures:
+- Timestamp of the action
+- Location (unidad)
+- Optional photo verification
+- Validates employee is at the correct location
+
+### Manual Registration
+
+Administrators can manually create attendance records:
+
+```java
+@PostMapping("/manual")
+public ResponseEntity<ResponseData<?>> registroManual(@Valid @RequestBody RegistroManualDTO request) {
+    registroManual.execute(request);
+    return success("Asistencia registrada");
+}
+```
+
+<Note>
+Manual entries are typically used for corrections, remote workers, or special circumstances where automatic registration isn't possible.
+</Note>
+
+### Complete Shift Creation
+
+Create a full shift with start and end times in a single operation:
+
+```java
+@PostMapping("/jornada/completa")
+public ResponseEntity<ResponseData<?>> crearJornadaCompleta(@Valid @RequestBody CrearJornadaCompletaDTO dto) {
+    crearJornadaCompleta.execute(dto);
+    return success("Jornada completa registrada");
+}
+```
+
+## Photo Verification
+
+The system supports photo capture for attendance verification:
+
+- **Photo at shift start**: `pathFotoInicio` in `AsistenciaModel`
+- **Photo at shift end**: `pathFotoFin` in `AsistenciaModel`
+- **Photo at break start/end**: `pathFotoInicio` / `pathFotoFin` in `PausaModel`
+
+Photos are stored as file paths and can be enabled/disabled per kiosk unit through the `requiereCamara` configuration.
+
+## Attendance Management
+
+### Updating Records
+
+Modify existing shift data:
+
+```java
+@PutMapping("/jornada")
+public ResponseEntity<ResponseData<?>> actualizarJornada(@Valid @RequestBody ActualizarJornadaDTO dto) {
+    actualizarJornada.execute(dto);
+    return success("Jornada actualizada");
+}
+```
+
+Update break information:
+
+```java
+@PutMapping("/pausa")
+public ResponseEntity<ResponseData<?>> actualizarPausa(@Valid @RequestBody ActualizarPausaDTO dto) {
+    actualizarPausa.execute(dto);
+    return success("Pausa actualizada");
+}
+```
+
+### Deleting Records
+
+Remove shift records:
+
+```java
+@DeleteMapping("/jornada/{id}")
+public ResponseEntity<ResponseData<?>> eliminarJornada(@PathVariable Integer id) {
+    eliminarJornada.execute(id);
+    return success("Jornada eliminada");
+}
+```
+
+Remove break records:
+
+```java
+@DeleteMapping("/pausa/{id}")
+public ResponseEntity<ResponseData<?>> eliminarPausa(@PathVariable Integer id) {
+    eliminarPausa.execute(id);
+    return success("Pausa eliminada");
+}
+```
+
+## Special Features
+
+### Automatic Shift Closure
+
+The system can automatically close shifts that weren't manually closed:
+- `cerradoAutomatico` flag indicates automatic closure
+- Helps prevent incomplete records
+
+### Inconsistency Detection
+
+The `inconsistencia` flag marks attendance records that require review:
+- Missing punch-out times
+- Unusual duration
+- Location mismatches
+- Policy violations
+
+### Compensation Time
+
+The `tiempoCompensado` field tracks additional time applied to the shift:
+- Early departures
+- Late arrivals
+- Make-up time
+- Configured per kiosk unit
+
+<Info>
+All attendance endpoints are located at `/asistencia` and are publicly accessible to support kiosk operations without authentication requirements.
+</Info>
+
+## Related Concepts
+
+- [Kiosk Mode](/concepts/kiosk-mode) - Self-service attendance registration
+- [Organizational Structure](/concepts/organizational-structure) - Units and departments

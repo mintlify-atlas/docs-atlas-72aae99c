@@ -1,0 +1,569 @@
+---
+title: Attendance Reports
+description: Generate JSON-based attendance reports with flexible filtering
+---
+
+## Get Attendance Report
+
+Retrieve detailed attendance records in JSON format.
+
+### Endpoint
+
+```http
+GET /asistencia/reporte/asistencias
+```
+
+### Query Parameters
+
+<ParamField query="empleadoId" type="integer" optional>
+  Filter by specific employee ID
+</ParamField>
+
+<ParamField query="desde" type="datetime" optional>
+  Start date/time in ISO 8601 format (e.g., 2026-03-01T00:00:00)
+</ParamField>
+
+<ParamField query="hasta" type="datetime" optional>
+  End date/time in ISO 8601 format (e.g., 2026-03-31T23:59:59)
+</ParamField>
+
+<ParamField query="unidadId" type="integer" optional>
+  Filter by organizational unit ID
+</ParamField>
+
+<ParamField query="empleadoResponsableId" type="integer" optional>
+  Filter by responsible employee/manager ID
+</ParamField>
+
+<ParamField query="supervisorId" type="integer" optional>
+  Filter by supervisor ID
+</ParamField>
+
+<ParamField query="zonaId" type="integer" optional>
+  Filter by geographic zone ID
+</ParamField>
+
+<ParamField query="puestoId" type="integer" optional>
+  Filter by job position ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="array">
+  <Expandable title="EmpleadoReporte">
+    <ResponseField name="empleadoId" type="integer">
+      Employee ID
+    </ResponseField>
+    
+    <ResponseField name="nombreCompleto" type="string">
+      Employee full name
+    </ResponseField>
+    
+    <ResponseField name="nip" type="string">
+      Employee identification number
+    </ResponseField>
+    
+    <ResponseField name="puesto" type="string">
+      Job position
+    </ResponseField>
+    
+    <ResponseField name="departamento" type="string">
+      Department name
+    </ResponseField>
+    
+    <ResponseField name="asistencias" type="array">
+      Array of attendance records for this employee
+      <Expandable title="Asistencia">
+        <ResponseField name="id" type="integer">
+          Attendance record ID
+        </ResponseField>
+        
+        <ResponseField name="fecha" type="string">
+          Date of attendance (ISO 8601)
+        </ResponseField>
+        
+        <ResponseField name="entrada" type="string">
+          Clock-in time (HH:mm:ss)
+        </ResponseField>
+        
+        <ResponseField name="salida" type="string">
+          Clock-out time (HH:mm:ss)
+        </ResponseField>
+        
+        <ResponseField name="horasTrabajadas" type="string">
+          Total hours worked (HH:mm:ss)
+        </ResponseField>
+        
+        <ResponseField name="pausas" type="array">
+          Array of break periods
+          <Expandable title="Pausa">
+            <ResponseField name="inicio" type="string">
+              Break start time (HH:mm:ss)
+            </ResponseField>
+            
+            <ResponseField name="fin" type="string">
+              Break end time (HH:mm:ss)
+            </ResponseField>
+            
+            <ResponseField name="duracion" type="string">
+              Break duration (HH:mm:ss)
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Asistencia por empleados"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/asistencias?empleadoId=456&desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "empleadoId": 456,
+      "nombreCompleto": "Juan Pérez García",
+      "nip": "1234",
+      "puesto": "Desarrollador Senior",
+      "departamento": "Tecnología",
+      "asistencias": [
+        {
+          "id": 12345,
+          "fecha": "2026-03-05",
+          "entrada": "08:00:00",
+          "salida": "17:00:00",
+          "horasTrabajadas": "08:00:00",
+          "pausas": [
+            {
+              "inicio": "12:00:00",
+              "fin": "13:00:00",
+              "duracion": "01:00:00"
+            }
+          ]
+        },
+        {
+          "id": 12346,
+          "fecha": "2026-03-06",
+          "entrada": "08:05:00",
+          "salida": "17:10:00",
+          "horasTrabajadas": "08:05:00",
+          "pausas": [
+            {
+              "inicio": "12:15:00",
+              "fin": "13:15:00",
+              "duracion": "01:00:00"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "message": "Asistencia por empleados",
+  "success": true
+}
+```
+
+---
+
+## Get Attendance Inconsistencies
+
+Retrieve attendance records with issues or violations.
+
+### Endpoint
+
+```http
+GET /asistencia/reporte/inconsistencias
+```
+
+### Query Parameters
+
+<ParamField query="fechaInicio" type="datetime" required>
+  Start date/time (ISO 8601)
+</ParamField>
+
+<ParamField query="fechaFin" type="datetime" required>
+  End date/time (ISO 8601)
+</ParamField>
+
+<ParamField query="empleadoId" type="integer" optional>
+  Filter by specific employee ID
+</ParamField>
+
+<ParamField query="unidadId" type="integer" optional>
+  Filter by unit ID
+</ParamField>
+
+<ParamField query="zonaId" type="integer" optional>
+  Filter by zone ID
+</ParamField>
+
+<ParamField query="supervisorId" type="integer" optional>
+  Filter by supervisor ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="array">
+  <Expandable title="Incidencia">
+    <ResponseField name="id" type="integer">
+      Inconsistency record ID
+    </ResponseField>
+    
+    <ResponseField name="empleadoId" type="integer">
+      Employee ID
+    </ResponseField>
+    
+    <ResponseField name="empleadoNombre" type="string">
+      Employee name
+    </ResponseField>
+    
+    <ResponseField name="fecha" type="string">
+      Date of the inconsistency
+    </ResponseField>
+    
+    <ResponseField name="tipo" type="string">
+      Type of inconsistency (e.g., FALTA_SALIDA, HORARIO_INCORRECTO)
+    </ResponseField>
+    
+    <ResponseField name="descripcion" type="string">
+      Description of the issue
+    </ResponseField>
+    
+    <ResponseField name="estado" type="string">
+      Status (PENDIENTE, RESUELTO, JUSTIFICADO)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Inconsistencias de asistencia"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/inconsistencias?fechaInicio=2026-03-01T00:00:00&fechaFin=2026-03-31T23:59:59&unidadId=5" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": 789,
+      "empleadoId": 456,
+      "empleadoNombre": "Juan Pérez García",
+      "fecha": "2026-03-05",
+      "tipo": "FALTA_SALIDA",
+      "descripcion": "Registro de entrada sin salida correspondiente",
+      "estado": "PENDIENTE"
+    },
+    {
+      "id": 790,
+      "empleadoId": 457,
+      "empleadoNombre": "María González López",
+      "fecha": "2026-03-07",
+      "tipo": "HORARIO_INCORRECTO",
+      "descripcion": "Entrada fuera del horario permitido",
+      "estado": "JUSTIFICADO"
+    }
+  ],
+  "message": "Inconsistencias de asistencia",
+  "success": true
+}
+```
+
+---
+
+## Get Monthly Summary
+
+Retrieve a summary of attendance for a specific employee and month.
+
+### Endpoint
+
+```http
+GET /asistencia/reporte/resumen-mes
+```
+
+### Query Parameters
+
+<ParamField query="empleadoId" type="integer" required>
+  Employee ID
+</ParamField>
+
+<ParamField query="anio" type="integer" optional>
+  Year (defaults to current year)
+</ParamField>
+
+<ParamField query="mes" type="integer" optional>
+  Month (1-12, defaults to current month)
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="object">
+  <Expandable title="ResumenMesAsistencia">
+    <ResponseField name="empleadoId" type="integer">
+      Employee ID
+    </ResponseField>
+    
+    <ResponseField name="anio" type="integer">
+      Year
+    </ResponseField>
+    
+    <ResponseField name="mes" type="integer">
+      Month (1-12)
+    </ResponseField>
+    
+    <ResponseField name="diasLaborados" type="integer">
+      Number of days worked
+    </ResponseField>
+    
+    <ResponseField name="diasFaltados" type="integer">
+      Number of days absent
+    </ResponseField>
+    
+    <ResponseField name="horasTotales" type="string">
+      Total hours worked (HH:mm:ss)
+    </ResponseField>
+    
+    <ResponseField name="promedioHorasDia" type="string">
+      Average hours per day (HH:mm:ss)
+    </ResponseField>
+    
+    <ResponseField name="retardos" type="integer">
+      Number of times tardy
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Resumen de asistencia del mes"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/resumen-mes?empleadoId=456&anio=2026&mes=3" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": {
+    "empleadoId": 456,
+    "anio": 2026,
+    "mes": 3,
+    "diasLaborados": 20,
+    "diasFaltados": 2,
+    "horasTotales": "160:00:00",
+    "promedioHorasDia": "08:00:00",
+    "retardos": 3
+  },
+  "message": "Resumen de asistencia del mes",
+  "success": true
+}
+```
+
+---
+
+## Get Days Worked in Month
+
+Retrieve the specific dates when an employee worked in a given month.
+
+### Endpoint
+
+```http
+GET /asistencia/reporte/dias-laborados
+```
+
+### Query Parameters
+
+<ParamField query="empleadoId" type="integer" required>
+  Employee ID
+</ParamField>
+
+<ParamField query="anio" type="integer" required>
+  Year (e.g., 2026)
+</ParamField>
+
+<ParamField query="mes" type="integer" required>
+  Month (1-12, e.g., 1 = January)
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="array">
+  Array of dates (ISO 8601 format: yyyy-MM-dd) when the employee had attendance
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Días laborados en el mes"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/dias-laborados?empleadoId=456&anio=2026&mes=3" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    "2026-03-01",
+    "2026-03-02",
+    "2026-03-03",
+    "2026-03-05",
+    "2026-03-06",
+    "2026-03-09",
+    "2026-03-10"
+  ],
+  "message": "Días laborados en el mes",
+  "success": true
+}
+```
+
+<Tip>
+Use this endpoint to build calendar views showing which days an employee worked.
+</Tip>
+
+---
+
+## Get Employees Without Attendance
+
+Retrieve employees who did not register attendance in a date range, grouped by date.
+
+### Endpoint
+
+```http
+GET /asistencia/reporte/empleados-sin-asistencia
+```
+
+### Query Parameters
+
+<ParamField query="fechaInicio" type="datetime" required>
+  Start date/time (ISO 8601)
+</ParamField>
+
+<ParamField query="fechaFin" type="datetime" required>
+  End date/time (ISO 8601)
+</ParamField>
+
+<ParamField query="unidadId" type="integer" optional>
+  Filter by unit ID
+</ParamField>
+
+<ParamField query="puestoId" type="integer" optional>
+  Filter by position ID
+</ParamField>
+
+<ParamField query="zonaId" type="integer" optional>
+  Filter by zone ID
+</ParamField>
+
+<ParamField query="supervisorId" type="integer" optional>
+  Filter by supervisor ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="array">
+  <Expandable title="InasistenciaPorFechaResponse">
+    <ResponseField name="fecha" type="string">
+      Date (ISO 8601)
+    </ResponseField>
+    
+    <ResponseField name="empleados" type="array">
+      Array of employees without attendance on this date
+      <Expandable title="EmpleadoBasico">
+        <ResponseField name="id" type="integer">
+          Employee ID
+        </ResponseField>
+        
+        <ResponseField name="nombreCompleto" type="string">
+          Employee full name
+        </ResponseField>
+        
+        <ResponseField name="nip" type="string">
+          Employee NIP
+        </ResponseField>
+        
+        <ResponseField name="puesto" type="string">
+          Job position
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Inasistencias agrupadas por fecha"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/empleados-sin-asistencia?fechaInicio=2026-03-01T00:00:00&fechaFin=2026-03-07T23:59:59&unidadId=5" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "fecha": "2026-03-05",
+      "empleados": [
+        {
+          "id": 458,
+          "nombreCompleto": "Carlos Ramírez Torres",
+          "nip": "5678",
+          "puesto": "Analista"
+        },
+        {
+          "id": 459,
+          "nombreCompleto": "Laura Martínez Cruz",
+          "nip": "9012",
+          "puesto": "Diseñadora"
+        }
+      ]
+    },
+    {
+      "fecha": "2026-03-06",
+      "empleados": [
+        {
+          "id": 460,
+          "nombreCompleto": "Pedro Sánchez López",
+          "nip": "3456",
+          "puesto": "Supervisor"
+        }
+      ]
+    }
+  ],
+  "message": "Inasistencias agrupadas por fecha",
+  "success": true
+}
+```
+
+<Note>
+This report only includes employees who were expected to work (based on their schedules) but did not register attendance.
+</Note>

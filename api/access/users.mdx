@@ -1,0 +1,467 @@
+---
+title: User Management
+description: Create and manage user accounts, permissions, and status
+---
+
+## List Users
+
+Retrieve a paginated list of all users in the system.
+
+### Endpoint
+
+```http
+GET /usuarios
+```
+
+### Query Parameters
+
+<ParamField query="page" type="integer" default="0">
+  Page number (zero-based)
+</ParamField>
+
+<ParamField query="size" type="integer" default="50">
+  Number of records per page
+</ParamField>
+
+### Response
+
+<ResponseField name="content" type="array">
+  Array of user basic information (UsuarioBasicoDTO)
+</ResponseField>
+
+<ResponseField name="totalElements" type="integer">
+  Total number of users
+</ResponseField>
+
+<ResponseField name="totalPages" type="integer">
+  Total number of pages
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  Page size
+</ResponseField>
+
+<ResponseField name="number" type="integer">
+  Current page number
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/usuarios?page=0&size=20" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "content": [
+    {
+      "id": 123,
+      "username": "jperez",
+      "email": "jperez@company.com",
+      "enabled": true,
+      "empleadoId": 456
+    }
+  ],
+  "totalElements": 150,
+  "totalPages": 8,
+  "size": 20,
+  "number": 0
+}
+```
+
+---
+
+## Get User by ID
+
+Retrieve detailed information for a specific user.
+
+### Endpoint
+
+```http
+GET /usuarios/{id}
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  User ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="object">
+  <Expandable title="User Object">
+    <ResponseField name="id" type="integer">
+      User ID
+    </ResponseField>
+    
+    <ResponseField name="username" type="string">
+      Username
+    </ResponseField>
+    
+    <ResponseField name="email" type="string">
+      User email address
+    </ResponseField>
+    
+    <ResponseField name="enabled" type="boolean">
+      Whether the user account is active
+    </ResponseField>
+    
+    <ResponseField name="idEmpleado" type="integer">
+      Associated employee ID
+    </ResponseField>
+    
+    <ResponseField name="roles" type="array">
+      List of role objects assigned to the user
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Usuario encontrado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/usuarios/123 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": {
+    "id": 123,
+    "username": "jperez",
+    "email": "jperez@company.com",
+    "enabled": true,
+    "idEmpleado": 456,
+    "roles": [
+      {
+        "id": 1,
+        "nombre": "Administrador"
+      }
+    ]
+  },
+  "message": "Usuario encontrado",
+  "success": true
+}
+```
+
+---
+
+## Create User
+
+Create a new user account.
+
+### Endpoint
+
+```http
+POST /usuarios
+```
+
+### Request Body
+
+<ParamField body="username" type="string" required>
+  Username (3-50 characters)
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Password (6-100 characters)
+</ParamField>
+
+<ParamField body="email" type="string" optional>
+  Valid email address
+</ParamField>
+
+<ParamField body="enabled" type="boolean" default="true">
+  Whether the account is active
+</ParamField>
+
+<ParamField body="idEmpleado" type="integer" required>
+  Associated employee ID
+</ParamField>
+
+<ParamField body="roles" type="array" optional>
+  Array of role IDs to assign to the user
+</ParamField>
+
+<ParamField body="permissions" type="array" optional>
+  Set of permission strings
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Usuario creado exitosamente"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X POST http://localhost:8081/comialex/api/integra/usuarios \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "mgarcia",
+    "password": "SecurePass123!",
+    "email": "mgarcia@company.com",
+    "enabled": true,
+    "idEmpleado": 789,
+    "roles": [1, 2]
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "data": true,
+  "message": "Usuario creado exitosamente",
+  "success": true
+}
+```
+
+---
+
+## Update User
+
+Update user account details.
+
+### Endpoint
+
+```http
+PATCH /usuarios/usuario
+```
+
+### Request Body
+
+<ParamField body="id" type="integer" required>
+  User ID to update
+</ParamField>
+
+<ParamField body="username" type="string" optional>
+  New username
+</ParamField>
+
+<ParamField body="email" type="string" optional>
+  New email address
+</ParamField>
+
+<ParamField body="password" type="string" optional>
+  New password (if changing)
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="boolean">
+  Returns true on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Usuario actualizado exitosamente"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH http://localhost:8081/comialex/api/integra/usuarios/usuario \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 123,
+    "email": "juan.perez@company.com"
+  }'
+```
+
+---
+
+## Get User Permissions
+
+Retrieve the permissions assigned to a specific user.
+
+### Endpoint
+
+```http
+GET /usuarios/{id}/permisos
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  User ID
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="array">
+  Array of permission strings
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Permisos obtenidos"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/usuarios/123/permisos \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    "asistencia.ver",
+    "asistencia.registrar",
+    "empleados.ver",
+    "empleados.editar",
+    "reportes.generar"
+  ],
+  "message": "Permisos obtenidos",
+  "success": true
+}
+```
+
+---
+
+## Update User Permissions
+
+Update the permissions assigned to a user.
+
+### Endpoint
+
+```http
+PATCH /usuarios/permisos/actualizar
+```
+
+### Request Body
+
+<ParamField body="userId" type="integer" required>
+  User ID
+</ParamField>
+
+<ParamField body="permissions" type="array" required>
+  Array of permission strings to assign
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="string">
+  Returns "OK" on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Permisos actualizados"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH http://localhost:8081/comialex/api/integra/usuarios/permisos/actualizar \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": 123,
+    "permissions": [
+      "asistencia.ver",
+      "asistencia.registrar",
+      "reportes.generar"
+    ]
+  }'
+```
+
+---
+
+## Update User Status
+
+Enable or disable a user account.
+
+### Endpoint
+
+```http
+PATCH /usuarios/{id}/estatus
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  User ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="activo" type="boolean" required>
+  True to enable, false to disable
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="string">
+  Returns "OK" on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Estatus actualizado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X PATCH "http://localhost:8081/comialex/api/integra/usuarios/123/estatus?activo=false" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+<Note>
+Disabling a user account will prevent login but will not invalidate existing JWT tokens. Consider implementing token version invalidation for immediate effect.
+</Note>
+
+---
+
+## Delete User
+
+Delete a user account.
+
+### Endpoint
+
+```http
+DELETE /usuarios/{id}
+```
+
+### Path Parameters
+
+<ParamField path="id" type="integer" required>
+  User ID to delete
+</ParamField>
+
+### Response
+
+<ResponseField name="data" type="null">
+  No data returned on success
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message: "Usuario eliminado"
+</ResponseField>
+
+### Example Request
+
+```bash cURL
+curl -X DELETE http://localhost:8081/comialex/api/integra/usuarios/123 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+<Warning>
+Deleting a user is a permanent action. Consider disabling the account instead if you need to preserve audit history.
+</Warning>

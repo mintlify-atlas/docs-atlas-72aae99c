@@ -1,0 +1,150 @@
+---
+title: 'Manual Entry'
+api: 'POST /asistencia/manual'
+description: 'Register attendance manually for administrative corrections'
+---
+
+## Overview
+
+This endpoint allows administrators to manually register attendance events for employees. It is used for correcting missed punches, backdating entries, or making administrative adjustments to attendance records.
+
+## Request Body
+
+<ParamField body="empleadoId" type="integer" required>
+  The unique identifier of the employee for whom the manual entry is being made
+</ParamField>
+
+<ParamField body="tipoAccion" type="string" required>
+  The type of attendance action being registered manually. Allowed values:
+  - `iniciarJornada` - Start shift
+  - `finalizarJornada` - End shift
+  - `finalizarJornadaDeposito` - End shift with deposit
+  - `iniciarPausa` - Start break
+  - `finalizarPausa` - End break
+</ParamField>
+
+<ParamField body="hora" type="string" required>
+  The time of the attendance event in HH:mm:ss format (e.g., "08:30:00")
+</ParamField>
+
+<ParamField body="observaciones" type="string" required>
+  Notes or comments explaining the reason for the manual entry. This field is mandatory for audit purposes
+</ParamField>
+
+<ParamField body="unidadId" type="integer" required>
+  The ID of the unit/location where the attendance event occurred
+</ParamField>
+
+<ParamField body="pausa" type="string">
+  Required when `tipoAccion` is `iniciarPausa` or `finalizarPausa`. Allowed values:
+  - `COMIDA` - Meal break
+  - `OTRA` - Other type of break
+</ParamField>
+
+<ParamField body="unidadAsignadaId" type="integer">
+  The ID of the employee's assigned unit (optional)
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the operation was successful
+</ResponseField>
+
+<ResponseField name="data" type="null">
+  No data is returned for this endpoint
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message: "Asistencia registrada"
+</ResponseField>
+
+## Example Requests
+
+### Manual Shift Start
+
+```bash cURL
+curl -X POST https://api.integra.com/asistencia/manual \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "empleadoId": 123,
+    "tipoAccion": "iniciarJornada",
+    "hora": "08:00:00",
+    "observaciones": "Empleado olvidó registrar entrada, verificado con supervisor",
+    "unidadId": 5,
+    "unidadAsignadaId": 5
+  }'
+```
+
+### Manual Break Start
+
+```bash cURL
+curl -X POST https://api.integra.com/asistencia/manual \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "empleadoId": 123,
+    "tipoAccion": "iniciarPausa",
+    "hora": "13:00:00",
+    "pausa": "COMIDA",
+    "observaciones": "Sistema no registró pausa automáticamente",
+    "unidadId": 5
+  }'
+```
+
+### Manual Shift End with Deposit
+
+```bash cURL
+curl -X POST https://api.integra.com/asistencia/manual \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "empleadoId": 123,
+    "tipoAccion": "finalizarJornadaDeposito",
+    "hora": "17:30:00",
+    "observaciones": "Ajuste por falla en kiosko al finalizar turno",
+    "unidadId": 5
+  }'
+```
+
+## Response Example
+
+```json Success Response
+{
+  "success": true,
+  "data": null,
+  "message": "Asistencia registrada"
+}
+```
+
+```json Error Response
+{
+  "success": false,
+  "message": "El ID del empleado no puede ser nulo"
+}
+```
+
+## Use Cases
+
+### Missed Punch Correction
+When an employee forgets to clock in or out, administrators can use this endpoint to create the missing attendance record with proper documentation.
+
+### System Failure Recovery
+If the kiosk or attendance system was unavailable, manual entries can be made to ensure accurate attendance records.
+
+### Time Adjustments
+For approved schedule changes or corrections, this endpoint allows backdating of attendance events with proper audit trail.
+
+### Break Corrections
+If break times were not properly recorded, they can be manually entered to maintain accurate work hour calculations.
+
+## Business Rules
+
+- All fields except `pausa` and `unidadAsignadaId` are mandatory
+- The `pausa` field is required only when `tipoAccion` involves break actions
+- The `observaciones` field is mandatory for audit and compliance purposes
+- Manual entries should follow the same business logic as automatic entries (e.g., cannot end a shift that wasn't started)
+- Only authorized administrators should have access to this endpoint
+- All manual entries are logged with the administrator's information for audit trail
+- Time values must be in valid HH:mm:ss format

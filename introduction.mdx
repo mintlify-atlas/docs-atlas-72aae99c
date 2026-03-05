@@ -1,0 +1,127 @@
+---
+title: Introduction
+description: Learn about Integra, a comprehensive employee attendance and workforce management system built with Spring Boot
+---
+
+## What is Integra?
+
+Integra is a comprehensive backend API service for employee attendance tracking and workforce management. Built on Spring Boot 4.0.3, it provides organizations with a robust platform to manage employee check-ins, work schedules, time-off requests, and detailed reporting for payroll processing.
+
+<Note>
+Integra is designed for organizations with multiple work units, departments, and locations that need centralized attendance control and workforce analytics.
+</Note>
+
+## Key Features
+
+### Attendance Management
+- **Real-time Check-in/Check-out**: Employees can register their work shifts with precise timestamps
+- **Break Tracking**: Detailed logging of lunch breaks and rest periods
+- **Kiosk Mode**: Dedicated interface for automated attendance terminals at facility entrances
+- **Photo Capture**: Visual verification of employee attendance with automatic photo capture
+- **Manual Registration**: Supervisors can manually register attendance when needed
+- **Overtime Control**: Track and manage additional hours worked beyond regular schedules
+
+### Employee & Organization Management
+- **Employee Catalog**: Comprehensive employee directory with personal information, positions, and department assignments
+- **Organizational Structure**: Manage departments, positions, work units, and zones
+- **Supervisor Assignments**: Define hierarchical reporting structures
+- **Credential Management**: Issue and track employee badges and access credentials
+
+### Access Control & Security
+- **JWT Authentication**: Secure token-based authentication using RSA public/private key encryption
+- **Role-Based Access Control (RBAC)**: Fine-grained permissions system
+- **Token Versioning**: Dynamic token invalidation for enhanced security
+- **Password Recovery**: Self-service password reset functionality
+- **Session Management**: Stateless authentication with configurable token expiration
+
+### Reporting & Analytics
+- **Attendance Reports**: Detailed records of who worked when and for how long
+- **Excel Export**: Download payroll-ready reports in Excel format
+- **Break Analysis**: Review exact timing and duration of employee breaks
+- **Monthly Summaries**: Aggregate reports of days worked vs. days absent
+- **Inconsistency Detection**: Identify missing check-outs or incomplete records
+- **Supervisor Dashboards**: Unit-specific attendance overview for managers
+
+### Operational Management
+- **Work Schedules**: Define operating hours for each unit and department
+- **Time Zone Support**: All timestamps in America/Mexico_City timezone
+- **Observation Tracking**: Document audit findings and compliance issues
+- **Cache Optimization**: High-performance caching with Caffeine for frequently accessed data
+
+## Technology Stack
+
+Integra is built with modern, enterprise-grade technologies:
+
+- **Framework**: Spring Boot 4.0.3
+- **Language**: Java 25
+- **Database**: MariaDB with JPA/Hibernate
+- **Authentication**: JWT (JSON Web Tokens) with JJWT 0.13.0
+- **Security**: Spring Security with BCrypt password encoding
+- **API Documentation**: SpringDoc OpenAPI 2.8.5 (Swagger UI available)
+- **Caching**: Caffeine cache for optimal performance
+- **Email**: Spring Mail for notifications and password recovery
+- **File Processing**: Apache POI 5.5.0 for Excel report generation
+- **Validation**: Jakarta Bean Validation
+- **Monitoring**: Spring Boot Actuator with Prometheus metrics
+
+## Architecture Overview
+
+### Stateless REST API
+Integra follows a stateless architecture where each request carries authentication via JWT tokens. No server-side session storage is required, enabling horizontal scalability.
+
+### Layered Architecture
+```
+Controller Layer  → Service Layer → Repository Layer → Database
+     ↓
+  Security Filter (JWT validation)
+     ↓
+  Request/Response DTOs
+```
+
+### Database Schema
+The application uses a MariaDB database with the schema `comialex`. Database operations are managed through Spring Data JPA with Hibernate as the ORM provider.
+
+### Security Architecture
+- **RSA Key Pair**: JWT tokens are signed with a private key (`private.pem`) and verified with a public key (`public.pem`)
+- **Token Expiration**: 30 days (2,592,000 seconds)
+- **Password Encryption**: BCrypt for secure password hashing
+- **CORS Ready**: Configured for cross-origin requests
+- **Stateless Sessions**: `SessionCreationPolicy.STATELESS` for API-first design
+
+## API Context Path
+
+All API endpoints are served under:
+```
+/comialex/api/integra
+```
+
+For example, the login endpoint would be:
+```
+POST http://localhost:8081/comialex/api/integra/auth/login
+```
+
+## Who Should Use This Documentation?
+
+This documentation is designed for:
+
+- **Backend Developers**: Integrating with the Integra API from web or mobile applications
+- **System Administrators**: Deploying and configuring Integra in production environments
+- **DevOps Engineers**: Setting up CI/CD pipelines and monitoring
+- **QA Engineers**: Testing API endpoints and validating business logic
+- **Technical Managers**: Understanding system capabilities and architecture
+
+<Info>
+If you're looking to get started quickly, head over to the [Quickstart Guide](/quickstart) to set up your development environment and make your first API call.
+</Info>
+
+## Support & Resources
+
+- **API Version**: 1.0.1-Beta
+- **Developer**: Pablo Reyes
+- **API Documentation**: Available via Swagger UI at `/swagger-ui.html`
+- **Health Checks**: Available via Spring Boot Actuator at `/actuator/health`
+- **Metrics**: Prometheus metrics available at `/actuator/prometheus`
+
+## License
+
+Integra 2025 Pablo Reyes Lorenzo. Use requires owner consent.

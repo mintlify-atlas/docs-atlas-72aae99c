@@ -1,0 +1,367 @@
+---
+title: 'Organizational Structure'
+description: 'How Integra organizes departments, positions, units, and zones'
+---
+
+## Overview
+
+Integra's organizational structure defines the hierarchical relationship between different organizational elements: departments, positions, units (work locations), and zones. This structure provides the foundation for employee assignment, attendance tracking, and reporting.
+
+## Core Components
+
+### Departments (Departamentos)
+
+Departments represent functional divisions within the organization.
+
+```java
+@Entity
+@Table(name = "departamento")
+public class DepartamentoEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @Size(max = 50)
+    @NotNull
+    private String nombre;
+}
+```
+
+**Usage:**
+- Groups employees by functional area (Sales, HR, Operations, etc.)
+- Every employee must belong to a department
+- Used for reporting and organizational charts
+
+### Positions (Puestos)
+
+Positions define job roles within the organization.
+
+```java
+@Entity
+@Table(name = "puesto")
+public class PuestoEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @Size(max = 50)
+    @NotNull
+    private String nombre;
+    
+    @ColumnDefault("1")
+    private Boolean activo;
+}
+```
+
+**Features:**
+- Defines employee job titles and roles
+- Can be activated/deactivated with `activo` flag
+- Every employee must have an assigned position
+- Examples: "Manager", "Supervisor", "Operator", "Administrator"
+
+### Units (Unidades)
+
+Units represent physical work locations or branches where employees are assigned and attendance is tracked.
+
+```java
+@Entity
+@Table(name = "unidad")
+public class UnidadEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @Size(max = 10)
+    private String clave;
+    
+    @Size(max = 100)
+    @NotNull
+    private String nombre;
+    
+    @Size(max = 80)
+    private String localizacion;
+    
+    @Size(max = 15)
+    private String telefono;
+    
+    @ColumnDefault("1")
+    private Boolean activo;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "zona_id")
+    private ZonaEntity zona;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "estado_id")
+    private EstadoEntity estado;
+    
+    @Size(max = 255)
+    private String nombreCompleto;
+    
+    @Size(max = 255)
+    private String direccion;
+    
+    @Size(max = 100)
+    private String email;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supervisor_id")
+    private EmpleadoEntity supervisor;
+    
+    // Kiosk-specific fields
+    @ColumnDefault("1")
+    private Boolean requiereCamara;
+    
+    @Size(max = 5)
+    private String codigoAutorizacionKiosco;
+    
+    private Boolean requiereCodigo;
+    
+    @Column(name = "version_kiosco")
+    private Integer versionKiosco;
+    
+    private LocalTime tiempoCompensacion;
+}
+```
+
+**Key characteristics:**
+- `clave`: Short unique code for the unit
+- `nombre`: Full unit name
+- `nombreCompleto`: Auto-generated concatenation of clave and nombre
+- `localizacion`: Physical location/address
+- `zona`: Geographic zone assignment
+- `estado`: State/province location
+- `supervisor`: Employee responsible for the unit
+- `activo`: Active/inactive status
+
+**Kiosk configuration:**
+- `requiereCamara`: Whether photo verification is required
+- `codigoAutorizacionKiosco`: Authorization code for kiosk setup
+- `requiereCodigo`: Whether access code is needed
+- `tiempoCompensacion`: Compensation time for early/late punches
+
+<Info>
+Units serve dual purposes: they are both organizational assignments for employees and physical locations for attendance registration through kiosks.
+</Info>
+
+### Zones (Zonas)
+
+Zones group multiple units by geographic area.
+
+```java
+@Entity
+@Table(name = "zona")
+public class ZonaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    
+    @Size(max = 30)
+    @NotNull
+    private String nombre;
+    
+    @ColumnDefault("1")
+    private Boolean activo;
+}
+```
+
+**Purpose:**
+- Geographic grouping of units
+- Regional reporting and management
+- Territory assignment
+- Can be activated/deactivated
+
+## Employee Relationships
+
+Employees are connected to the organizational structure through multiple relationships:
+
+```java
+@Entity
+@Table(name = "empleado")
+public class EmpleadoEntity {
+    // ... basic fields ...
+    
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "departamento_id", nullable = false)
+    private DepartamentoEntity departamento;
+    
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "puesto_id", nullable = false)
+    private PuestoEntity puesto;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unidad_id")
+    private UnidadEntity unidad;
+    
+    private Integer zonaPrincipal;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "jefe_id")
+    private EmpleadoEntity jefe;
+    
+    @OneToMany(mappedBy = "jefe", fetch = FetchType.LAZY)
+    private List<EmpleadoEntity> plantilla = new ArrayList<>();
+}
+```
+
+**Relationship breakdown:**
+- **Department**: Required - defines functional area
+- **Position**: Required - defines job role
+- **Unit**: Optional - primary work location
+- **Zone**: Optional - primary geographic zone (stored as ID)
+- **Manager (jefe)**: Optional - direct supervisor relationship
+- **Team (plantilla)**: Employees managed by this person
+
+## Hierarchical Relationships
+
+### Management Hierarchy
+
+The system supports a management chain through the `jefe` relationship:
+
+```
+Manager (jefe = null)
+  ├─ Supervisor A (jefe = Manager.id)
+  │   ├─ Employee 1 (jefe = Supervisor A.id)
+  │   └─ Employee 2 (jefe = Supervisor A.id)
+  └─ Supervisor B (jefe = Manager.id)
+      ├─ Employee 3 (jefe = Supervisor B.id)
+      └─ Employee 4 (jefe = Supervisor B.id)
+```
+
+### Location Hierarchy
+
+Geographic organization flows from Zones to Units:
+
+```
+Zone: "North Region"
+  ├─ Unit: "Branch 001" (Estado: California)
+  ├─ Unit: "Branch 002" (Estado: California)
+  └─ Unit: "Branch 003" (Estado: Oregon)
+
+Zone: "South Region"
+  ├─ Unit: "Branch 101" (Estado: Texas)
+  └─ Unit: "Branch 102" (Estado: Arizona)
+```
+
+## API Endpoints
+
+### Department Management
+
+```java
+@RestController
+public class DepartamentoController {
+    // GET /departamentos - List all departments
+    // POST /departamentos - Create department
+    // PUT /departamentos/{id} - Update department
+    // DELETE /departamentos/{id} - Delete department
+}
+```
+
+### Position Management
+
+```java
+@RestController
+public class PuestoController {
+    // GET /puestos - List all positions
+    // POST /puestos - Create position
+    // PUT /puestos/{id} - Update position
+    // PATCH /puestos/{id}/activar - Activate position
+    // PATCH /puestos/{id}/desactivar - Deactivate position
+}
+```
+
+### Unit Management
+
+```java
+@RestController
+public class UnidadCommandController {
+    // GET /unidades - List all units
+    // GET /unidades/{id} - Get unit details
+    // POST /unidades - Create unit
+    // PUT /unidades/{id} - Update unit
+    // DELETE /unidades/{id} - Delete unit
+}
+```
+
+### Zone Management
+
+```java
+@RestController
+public class ZonaQueryController {
+    // GET /zonas - List all zones
+}
+
+@RestController
+public class ZonaCommandController {
+    // POST /zonas - Create zone
+    // PUT /zonas/{id} - Update zone
+    // DELETE /zonas/{id} - Delete zone
+}
+```
+
+## Organizational Catalogs
+
+The system provides catalog endpoints for dropdown/selection lists:
+
+```java
+@RestController
+public class CatalogoUnidadController {
+    // Returns simplified unit lists for UI selectors
+}
+```
+
+These catalogs return lightweight data structures optimized for:
+- Form dropdowns
+- Employee assignment interfaces
+- Quick lookups
+
+## Unit Supervision
+
+Each unit can have an assigned supervisor:
+
+```java
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "supervisor_id")
+private EmpleadoEntity supervisor;
+```
+
+**Supervisor responsibilities:**
+- Oversee unit operations
+- Approve attendance modifications
+- Manage unit employees
+- Monitor unit performance
+
+<Note>
+The supervisor must be an existing employee in the system. Circular references (employee supervising themselves) should be prevented at the application level.
+</Note>
+
+## Best Practices
+
+### Naming Conventions
+
+- **Departments**: Use clear functional names ("Human Resources", "Operations")
+- **Positions**: Use standard job titles ("Senior Developer", "Sales Manager")
+- **Units**: Include location identifiers ("Warehouse-Dallas", "Store-NYC-001")
+- **Zones**: Use geographic or regional names ("East Coast", "Central Region")
+
+### Data Integrity
+
+1. **Before deleting departments/positions**: Ensure no employees are assigned
+2. **Unit deactivation**: Use `activo = false` instead of deletion
+3. **Zone changes**: Consider impact on reporting when reassigning units
+4. **Supervisor assignment**: Validate supervisor works at or manages the unit
+
+### Performance Considerations
+
+- Units use `@DynamicInsert` and `@DynamicUpdate` for efficient database operations
+- Lazy loading for relationships prevents unnecessary data fetching
+- `nombreCompleto` is auto-generated at database level for consistency
+
+## Related Concepts
+
+- [Access Control](/concepts/access-control) - User roles and permissions
+- [Attendance System](/concepts/attendance-system) - How units relate to attendance
+- [Kiosk Mode](/concepts/kiosk-mode) - Unit-based attendance registration

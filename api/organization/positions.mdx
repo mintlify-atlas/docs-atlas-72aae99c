@@ -1,0 +1,107 @@
+---
+title: 'Positions API'
+description: 'Manage job positions within the organization'
+---
+
+# Positions API
+
+The Positions API provides endpoints to retrieve and manage job positions (puestos) within the organization.
+
+## Endpoints
+
+### Get All Positions
+
+Retrieves a list of all job positions in the organization.
+
+<CodeGroup>
+```bash cURL
+curl -X GET "https://api.integra.com/puestos" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript JavaScript
+fetch('https://api.integra.com/puestos', {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_TOKEN'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = "https://api.integra.com/puestos"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+#### Request
+
+**Method:** `GET`
+
+**Endpoint:** `/puestos`
+
+**Headers:**
+- `Authorization`: Bearer token (required)
+
+#### Response
+
+**Status Code:** `200 OK`
+
+```json Response Example
+{
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Gerente General",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "nombre": "Supervisor de Operaciones",
+      "activo": true
+    },
+    {
+      "id": 3,
+      "nombre": "Operador de Caja",
+      "activo": false
+    }
+  ],
+  "message": "Puestos"
+}
+```
+
+## Entity Structure
+
+### Position Entity
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | Integer | Unique identifier for the position |
+| `nombre` | String | Name of the position |
+| `activo` | Boolean | Indicates if the position is active/available |
+
+## Status Values
+
+- `activo: true` - The position is active and can be assigned to employees
+- `activo: false` - The position is inactive and not available for assignment
+
+## Relationships
+
+Positions are job roles that:
+- Can be assigned to employees
+- May be associated with specific departments
+- Define the role and responsibilities within the organization
+- Can be active or inactive based on organizational needs
+
+## Related Endpoints
+
+- [Departments API](/api/organization/departments) - Manage organizational departments
+- [Units API](/api/organization/units) - Manage organizational units
+- [Employees API](/api/employees) - Manage employee information and assignments

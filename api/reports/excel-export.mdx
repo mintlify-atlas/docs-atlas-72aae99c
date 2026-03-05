@@ -1,0 +1,323 @@
+---
+title: Excel Export
+description: Export attendance reports to Excel format with detailed analysis
+---
+
+## Export Detailed Attendance to Excel
+
+Generate and download a detailed attendance report in Excel format with nested break information.
+
+### Endpoint
+
+```http
+GET /asistencia/reporte/asistencias/detallado/excel
+```
+
+### Query Parameters
+
+<ParamField query="empleadoId" type="integer" optional>
+  Filter by specific employee ID
+</ParamField>
+
+<ParamField query="desde" type="datetime" optional>
+  Start date/time in ISO 8601 format (e.g., 2026-03-01T00:00:00)
+</ParamField>
+
+<ParamField query="hasta" type="datetime" optional>
+  End date/time in ISO 8601 format (e.g., 2026-03-31T23:59:59)
+</ParamField>
+
+<ParamField query="unidadId" type="integer" optional>
+  Filter by organizational unit ID
+</ParamField>
+
+<ParamField query="empleadoResponsableId" type="integer" optional>
+  Filter by responsible employee/manager ID
+</ParamField>
+
+<ParamField query="supervisorId" type="integer" optional>
+  Filter by supervisor ID
+</ParamField>
+
+<ParamField query="zonaId" type="integer" optional>
+  Filter by geographic zone ID
+</ParamField>
+
+<ParamField query="puestoId" type="integer" optional>
+  Filter by job position ID
+</ParamField>
+
+### Response
+
+Returns binary Excel file data (.xlsx format) with appropriate headers for browser download.
+
+**Response Headers:**
+```
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+Content-Disposition: attachment; filename="reporte-asistencias-detallado.xlsx"
+```
+
+### Example Request
+
+```bash cURL
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/asistencias/detallado/excel?desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59&unidadId=5" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  --output reporte-asistencias.xlsx
+```
+
+<Tip>
+Use the `--output` or `-o` flag with curl to save the file directly to disk.
+</Tip>
+
+### JavaScript Example
+
+```javascript
+const token = localStorage.getItem('authToken');
+const params = new URLSearchParams({
+  desde: '2026-03-01T00:00:00',
+  hasta: '2026-03-31T23:59:59',
+  unidadId: 5
+});
+
+fetch(`http://localhost:8081/comialex/api/integra/asistencia/reporte/asistencias/detallado/excel?${params}`, {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+})
+.then(response => response.blob())
+.then(blob => {
+  // Create download link
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'reporte-asistencias-detallado.xlsx';
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+});
+```
+
+### Python Example
+
+```python
+import requests
+
+url = 'http://localhost:8081/comialex/api/integra/asistencia/reporte/asistencias/detallado/excel'
+headers = {'Authorization': f'Bearer {token}'}
+params = {
+    'desde': '2026-03-01T00:00:00',
+    'hasta': '2026-03-31T23:59:59',
+    'unidadId': 5
+}
+
+response = requests.get(url, headers=headers, params=params)
+
+if response.status_code == 200:
+    with open('reporte-asistencias-detallado.xlsx', 'wb') as f:
+        f.write(response.content)
+    print('Excel file downloaded successfully')
+else:
+    print(f'Error: {response.status_code}')
+```
+
+## Excel File Structure
+
+The generated Excel file includes the following information:
+
+### Sheet 1: Attendance Summary
+
+| Column | Description |
+|--------|-------------|
+| Empleado ID | Employee identifier |
+| Nombre Completo | Full name |
+| NIP | Employee identification number |
+| Puesto | Job position |
+| Departamento | Department name |
+| Fecha | Date of attendance |
+| Entrada | Clock-in time |
+| Salida | Clock-out time |
+| Horas Trabajadas | Total hours worked |
+
+### Sheet 2: Break Details (Nested)
+
+For each attendance record:
+
+| Column | Description |
+|--------|-------------|
+| Empleado | Employee name |
+| Fecha | Date |
+| Pausa Inicio | Break start time |
+| Pausa Fin | Break end time |
+| Duración Pausa | Break duration |
+
+### Features
+
+- **Formatted Headers**: Bold, colored header row
+- **Date Formatting**: Dates in DD/MM/YYYY format
+- **Time Formatting**: Times in HH:mm:ss format
+- **Auto-sizing**: Columns automatically sized to content
+- **Multiple Sheets**: Separate sheets for attendance and breaks
+- **Totals**: Summary totals at the bottom of sheets
+
+## Get Attendance Image
+
+Retrieve the attendance photo/image captured during clock-in.
+
+### Endpoint
+
+```http
+GET /asistencia/reporte/{filename}
+```
+
+### Path Parameters
+
+<ParamField path="filename" type="string" required>
+  Image filename (e.g., "attendance_456_2026-03-05_080000.jpg")
+</ParamField>
+
+### Response
+
+Returns JPEG image data resized to 300x300 pixels.
+
+**Response Headers:**
+```
+Content-Type: image/jpeg
+Content-Disposition: inline; filename="{filename}"
+```
+
+### Example Request
+
+```bash cURL
+curl -X GET http://localhost:8081/comialex/api/integra/asistencia/reporte/attendance_456_2026-03-05_080000.jpg \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  --output attendance-photo.jpg
+```
+
+### HTML Image Display
+
+```html
+<img 
+  src="http://localhost:8081/comialex/api/integra/asistencia/reporte/attendance_456_2026-03-05_080000.jpg" 
+  alt="Attendance Photo"
+  style="width: 300px; height: 300px;"
+/>
+```
+
+<Note>
+Images are automatically resized to 300x300 pixels by the server for performance. Original images are stored on the server.
+</Note>
+
+## Performance Optimization
+
+### Client-Side Caching
+
+Excel reports can be large files. Consider implementing client-side caching:
+
+```javascript
+// Check if report was recently generated
+const cacheKey = `report_${unidadId}_${desde}_${hasta}`;
+const cachedReport = localStorage.getItem(cacheKey);
+const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+
+if (cachedReport && (Date.now() - cacheTime) < 3600000) { // 1 hour
+  // Use cached report
+  downloadFromCache(cachedReport);
+} else {
+  // Fetch new report and cache it
+  fetchAndCacheReport();
+}
+```
+
+### Server-Side Generation
+
+For very large reports:
+
+1. **Request report generation** (async)
+2. **Poll for completion status**
+3. **Download when ready**
+
+<Warning>
+Excel generation for large date ranges (>90 days) or many employees (>1000) can take significant time and server resources.
+
+**Best Practices:**
+- Generate reports during off-peak hours
+- Limit date ranges to necessary periods
+- Use filters to reduce dataset size
+- Consider pagination or splitting into multiple reports
+</Warning>
+
+## Common Use Cases
+
+### Monthly Payroll Report
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/asistencias/detallado/excel?desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -o payroll-march-2026.xlsx
+```
+
+### Department Attendance Analysis
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/asistencias/detallado/excel?unidadId=5&desde=2026-03-01T00:00:00&hasta=2026-03-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -o dept-tech-march-2026.xlsx
+```
+
+### Individual Employee Report
+
+```bash
+curl -X GET "http://localhost:8081/comialex/api/integra/asistencia/reporte/asistencias/detallado/excel?empleadoId=456&desde=2026-01-01T00:00:00&hasta=2026-12-31T23:59:59" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -o employee-456-year-2026.xlsx
+```
+
+## Error Handling
+
+### No Data Found
+
+If the filters don't match any attendance records:
+
+- Excel file is still generated with headers only
+- No error is returned
+- Check filters if file appears empty
+
+### Invalid Date Range
+
+If `desde` is after `hasta`:
+
+```json
+{
+  "success": false,
+  "message": "Invalid date range: start date must be before end date",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `400 Bad Request`
+
+### Missing Required Parameters
+
+```json
+{
+  "success": false,
+  "message": "Required parameter 'desde' is missing",
+  "timestamp": 1709644800000
+}
+```
+
+HTTP Status: `400 Bad Request`
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Attendance Reports" icon="table" href="/api/reports/attendance">
+    JSON-based attendance reports
+  </Card>
+  
+  <Card title="Reports Overview" icon="chart-line" href="/api/reports/overview">
+    Learn about report types and filtering
+  </Card>
+</CardGroup>
